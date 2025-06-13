@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Completo - Salão Michele</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- FullCalendar (para agendamento) -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            background-image: url('MICHA.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        /* [Mantenha todo o seu CSS original aqui] */
+        
+        /* Novos estilos */
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #calendar {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .fc-event {
+            cursor: pointer;
+        }
+        
+        .relatorio-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .fidelidade-badge {
+            font-size: 14px;
+            background-color: #9c27b0;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Login (visível inicialmente) -->
+    <div id="login-screen" class="login-container">
+        <div class="text-center mb-4">
+            <img src="MICHA.jpeg" alt="Logo Salão" style="max-width: 150px; border-radius: 50%; border: 3px solid #9c27b0;">
+            <h2 class="mt-3">Acesso Profissionais</h2>
+        </div>
+        
+        <form id="login-form">
+            <div class="mb-3">
+                <label for="login-email" class="form-label">E-mail</label>
+                <input type="email" class="form-control" id="login-email" required>
+            </div>
+            <div class="mb-3">
+                <label for="login-password" class="form-label">Senha</label>
+                <input type="password" class="form-control" id="login-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-box-arrow-in-right"></i> Entrar
+            </button>
+        </form>
+        
+        <div class="mt-3 text-center">
+            <button class="btn btn-link" onclick="showRegister()">Cadastrar novo profissional</button>
+        </div>
+    </div> 
+    
+    <!-- Formulário de Cadastro (oculto inicialmente) -->
+    <div id="register-screen" class="login-container" style="display: none;">
+        <div class="text-center mb-4">
+            <h2>Cadastro de Profissional</h2>
+        </div>
+        
+        <form id="register-form">
+            <div class="mb-3">
+                <label for="register-nome" class="form-label">Nome Completo</label>
+                <input type="text" class="form-control" id="register-nome" required>
+            </div>
+            <div class="mb-3">
+                <label for="register-email" class="form-label">E-mail</label>
+                <input type="email" class="form-control" id="register-email" required>
+            </div>
+            <div class="mb-3">
+                <label for="register-password" class="form-label">Senha (mínimo 6 caracteres)</label>
+                <input type="password" class="form-control" id="register-password" minlength="6" required>
+            </div>
+            <div class="mb-3">
+                <label for="register-telefone" class="form-label">Telefone</label>
+                <input type="tel" class="form-control" id="register-telefone">
+            </div>
+            <div class="mb-3">
+                <label for="register-funcao" class="form-label">Função</label>
+                <select class="form-select" id="register-funcao" required>
+                    <option value="cabelereira">Cabelereira(o)</option>
+                    <option value="manicure">Manicure</option>
+                    <option value="esteticista">Esteticista</option>
+                    <option value="administrador">Administrador</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-success w-100">
+                <i class="bi bi-person-plus"></i> Cadastrar
+            </button>
+            <button type="button" class="btn btn-link w-100 mt-2" onclick="showLogin()">
+                Voltar para login
+            </button>
+        </form>
+    </div>
+    
+    <!-- Sistema Principal (oculto inicialmente) -->
+    <div id="app-container" class="container" style="display: none;">
+        <!-- Cabeçalho com logout -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="logo no-print">
+                <img src="MICHA.jpeg" alt="Logo Salão de Beleza" style="max-width: 100px;">
+            </div>
+            <div>
+                <span id="user-name" class="me-3"></span>
+                <button class="btn btn-sm btn-outline-danger" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </button>
+            </div>
+        </div>
+        
+        <!-- Abas de Navegação -->
+        <ul class="nav nav-tabs mb-3" id="main-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="comanda-tab" data-bs-toggle="tab" data-bs-target="#comanda-tab-pane" type="button">
+                    <i class="bi bi-receipt"></i> Comandas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda-tab-pane" type="button">
+                    <i class="bi bi-calendar-check"></i> Agenda
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="relatorios-tab" data-bs-toggle="tab" data-bs-target="#relatorios-tab-pane" type="button">
+                    <i class="bi bi-graph-up"></i> Relatórios
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes-tab-pane" type="button">
+                    <i class="bi bi-people"></i> Clientes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="fidelidade-tab" data-bs-toggle="tab" data-bs-target="#fidelidade-tab-pane" type="button">
+                    <i class="bi bi-stars"></i> Fidelidade
+                </button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content" id="main-tab-content">
+            <!-- Aba 1: Comandas -->
+            <div class="tab-pane fade show active" id="comanda-tab-pane" role="tabpanel">
+                <!-- [Seu código de comandas original aqui] -->
+            </div>
+            
+            <!-- Aba 2: Agenda -->
+            <div class="tab-pane fade" id="agenda-tab-pane" role="tabpanel">
+                <div class="d-flex justify-content-between mb-3">
+                    <h3><i class="bi bi-calendar-check"></i> Agenda</h3>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novo-agendamento-modal">
+                        <i class="bi bi-plus"></i> Novo Agendamento
+                    </button>
+                </div>
+                
+                <div id="calendar"></div>
+                
+                <!-- Modal de Novo Agendamento -->
+                <div class="modal fade" id="novo-agendamento-modal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Novo Agendamento</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="form-agendamento">
+                                    <div class="mb-3">
+                                        <label class="form-label">Cliente</label>
+                                        <select class="form-select" id="agendamento-cliente" required>
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Serviço</label>
+                                        <select class="form-select" id="agendamento-servico" required>
+                                            <option value="">Selecione...</option>
+                                            <!-- Opções serão preenchidas via JS -->
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Profissional</label>
+                                        <select class="form-select" id="agendamento-profissional" required>
+                                            <option value="">Selecione...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Data e Hora</label>
+                                        <input type="datetime-local" class="form-control" id="agendamento-data" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Duração (minutos)</label>
+                                        <input type="number" class="form-control" id="agendamento-duracao" value="60" min="15" step="15" required>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" onclick="salvarAgendamento()">Salvar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aba 3: Relatórios -->
+            <div class="tab-pane fade" id="relatorios-tab-pane" role="tabpanel">
+                <h3><i class="bi bi-graph-up"></i> Relatórios Financeiros</h3>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label>Mês/Ano</label>
+                        <input type="month" class="form-control" id="relatorio-mes" onchange="carregarRelatorios()">
+                    </div>
+                    <div class="col-md-6">
+                        <label>Profissional</label>
+                        <select class="form-select" id="relatorio-profissional" onchange="carregarRelatorios()">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="relatorio-card">
+                            <h5>Total Recebido</h5>
+                            <h2 id="total-recebido">R$ 0,00</h2>
+                            <small class="text-muted">No período selecionado</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="relatorio-card">
+                            <h5>Serviços Realizados</h5>
+                            <h2 id="total-servicos">0</h2>
+                            <small class="text-muted">No período selecionado</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="relatorio-card">
+                            <h5>Média por Serviço</h5>
+                            <h2 id="media-servico">R$ 0,00</h2>
+                            <small class="text-muted">No período selecionado</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relatorio-card mt-4">
+                    <h5>Serviços Mais Realizados</h5>
+                    <canvas id="grafico-servicos" height="200"></canvas>
+                </div>
+                
+                <div class="relatorio-card mt-4">
+                    <h5>Evolução Semanal</h5>
+                    <canvas id="grafico-evolucao" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Aba 4: Clientes -->
+            <div class="tab-pane fade" id="clientes-tab-pane" role="tabpanel">
+                <!-- [Seu código de clientes original aqui] -->
+            </div>
+            
+            <!-- Aba 5: Fidelidade -->
+            <div class="tab-pane fade" id="fidelidade-tab-pane" role="tabpanel">
+                <h3><i class="bi bi-stars"></i> Programa de Fidelidade</h3>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Clientes ganham 1 ponto a cada R$ 10,00 gastos. 
+                    Cada ponto pode ser trocado por descontos ou serviços.
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="relatorio-card">
+                            <h5>Configuração do Programa</h5>
+                            <form id="form-fidelidade">
+                                <div class="mb-3">
+                                    <label class="form-label">Valor para 1 ponto (R$)</label>
+                                    <input type="number" class="form-control" id="valor-ponto" min="1" step="0.01" value="10" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Pontos para benefício</label>
+                                    <input type="number" class="form-control" id="pontos-beneficio" min="1" value="10" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Salvar Configuração</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="relatorio-card">
+                            <h5>Resgatar Pontos</h5>
+                            <form id="form-resgate">
+                                <div class="mb-3">
+                                    <label class="form-label">Cliente</label>
+                                    <select class="form-select" id="resgate-cliente" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Pontos Disponíveis</label>
+                                    <input type="text" class="form-control" id="pontos-disponiveis" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Pontos para Resgatar</label>
+                                    <input type="number" class="form-control" id="pontos-resgatar" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Benefício</label>
+                                    <select class="form-select" id="beneficio-resgate" required>
+                                        <option value="desconto">Desconto na próxima compra</option>
+                                        <option value="servico">Serviço gratuito</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success">Resgatar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relatorio-card">
+                    <h5>Top Clientes</h5>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Total Gasto</th>
+                                <th>Pontos</th>
+                                <th>Última Visita</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-clientes">
+                            <!-- Lista de clientes será preenchida via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO_ID",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // Variáveis globais
+        let calendar;
+        let currentUser;
+        let servicosDisponiveis = [
+            { id: 1, nome: "Corte de Cabelo", duracao: 45, valor: 60 },
+            { id: 2, nome: "Coloração", duracao: 120, valor: 150 },
+            { id: 3, nome: "Manicure", duracao: 60, valor: 40 },
+            { id: 4, nome: "Pedicure", duracao: 60, valor: 50 },
+            { id: 5, nome: "Maquiagem", duracao: 90, valor: 80 }
+        ];
+        
+        // ========== FUNÇÕES DE AUTENTICAÇÃO ========== //
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    currentUser = userCredential.user;
+                    checkUserProfile(currentUser.uid);
+                })
+                .catch((error) => {
+                    alert("Erro ao fazer login: " + error.message);
+                });
+        });
+        
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('register-nome').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const telefone = document.getElementById('register-telefone').value;
+            const funcao = document.getElementById('register-funcao').value;
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Salva informações adicionais no Firestore
+                    return db.collection('profissionais').doc(userCredential.user.uid).set({
+                        nome: nome,
+                        email: email,
+                        telefone: telefone,
+                        funcao: funcao,
+                        dataCadastro: new Date()
+                    });
+                })
+                .then(() => {
+                    alert("Profissional cadastrado com sucesso!");
+                    showLogin();
+                    document.getElementById('register-form').reset();
+                })
+                .catch((error) => {
+                    alert("Erro ao cadastrar: " + error.message);
+                });
+        });
+        
+        function checkUserProfile(userId) {
+            db.collection('profissionais').doc(userId).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        startApp(doc.data());
+                    } else {
+                        alert("Perfil de profissional não encontrado!");
+                        auth.signOut();
+                    }
+                });
+        }
+        
+        function startApp(userData) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            document.getElementById('user-name').textContent = userData.nome;
+            
+            // Inicializa módulos do sistema
+            initCalendar();
+            carregarClientes();
+            carregarProfissionais();
+            carregarRelatorios();
+            carregarTopClientes();
+        }
+        
+        function logout() {
+            auth.signOut().then(() => {
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('login-form').reset();
+                currentUser = null;
+            });
+        }
+        
+        function showRegister() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('register-screen').style.display = 'block';
+        }
+        
+        function showLogin() {
+            document.getElementById('register-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+        }
+        
+        // ========== FUNÇÕES DO SISTEMA ========== //
+        function initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'pt-br',
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    db.collection("agendamentos")
+                        .where("data", ">=", fetchInfo.start)
+                        .where("data", "<=", fetchInfo.end)
+                        .get()
+                        .then(querySnapshot => {
+                            const events = [];
+                            querySnapshot.forEach(doc => {
+                                const agendamento = doc.data();
+                                events.push({
+                                    id: doc.id,
+                                    title: `${agendamento.clienteNome} - ${agendamento.servicoNome}`,
+                                    start: agendamento.data.toDate(),
+                                    end: new Date(agendamento.data.toDate().getTime() + agendamento.duracao * 60000),
+                                    extendedProps: {
+                                        profissional: agendamento.profissionalNome,
+                                        clienteId: agendamento.clienteId,
+                                        servicoId: agendamento.servicoId
+                                    }
+                                });
+                            });
+                            successCallback(events);
+                        });
+                },
+                eventClick: function(info) {
+                    alert(`Agendamento: ${info.event.title}\nProfissional: ${info.event.extendedProps.profissional}`);
+                },
+                businessHours: {
+                    daysOfWeek: [1, 2, 3, 4, 5, 6], // Segunda a Sábado
+                    startTime: '09:00',
+                    endTime: '19:00'
+                },
+                slotMinTime: '08:00',
+                slotMaxTime: '20:00',
+                allDaySlot: false,
+                nowIndicator: true,
+                editable: true,
+                eventDrop: function(info) {
+                    atualizarAgendamento(info.event.id, {
+                        data: info.event.start
+                    });
+                },
+                eventResize: function(info) {
+                    const duracao = (info.event.end - info.event.start) / 60000;
+                    atualizarAgendamento(info.event.id, {
+                        duracao: duracao
+                    });
+                }
+            });
+            
+            calendar.render();
+        }
+        
+        function carregarClientes() {
+            db.collection("clientes").get().then(querySnapshot => {
+                const selectComanda = document.getElementById('cliente');
+                const selectAgendamento = document.getElementById('agendamento-cliente');
+                const selectResgate = document.getElementById('resgate-cliente');
+                
+                // Limpa os selects
+                selectComanda.innerHTML = '<option value="">Selecione...</option>';
+                selectAgendamento.innerHTML = '<option value="">Selecione...</option>';
+                selectResgate.innerHTML = '<option value="">Selecione...</option>';
+                
+                querySnapshot.forEach(doc => {
+                    const cliente = doc.data();
+                    const option = `<option value="${doc.id}">${cliente.nome}</option>`;
+                    
+                    selectComanda.innerHTML += option;
+                    selectAgendamento.innerHTML += option;
+                    selectResgate.innerHTML += option;
+                });
+            });
+        }
+        
+        function carregarProfissionais() {
+            db.collection("profissionais").get().then(querySnapshot => {
+                const selectComanda = document.getElementById('profissional');
+                const selectAgendamento = document.getElementById('agendamento-profissional');
+                const selectRelatorio = document.getElementById('relatorio-profissional');
+                
+                // Limpa os selects
+                selectComanda.innerHTML = '<option value="">Selecione...</option>';
+                selectAgendamento.innerHTML = '<option value="">Selecione...</option>';
+                selectRelatorio.innerHTML = '<option value="todos">Todos</option>';
+                
+                querySnapshot.forEach(doc => {
+                    const profissional = doc.data();
+                    const option = `<option value="${doc.id}">${profissional.nome}</option>`;
+                    
+                    selectComanda.innerHTML += option;
+                    selectAgendamento.innerHTML += option;
+                    selectRelatorio.innerHTML += option;
+                });
+            });
+        }
+        
+        function carregarServicos() {
+            const selectServico = document.getElementById('servico');
+            const selectAgendamento = document.getElementById('agendamento-servico');
+            
+            // Limpa os selects
+            selectServico.innerHTML = '<option value="">Selecione...</option>';
+            selectAgendamento.innerHTML = '<option value="">Selecione...</option>';
+            
+            servicosDisponiveis.forEach(servico => {
+                const option = `<option value="${servico.id}">${servico.nome} (R$ ${servico.valor.toFixed(2)})</option>`;
+                selectServico.innerHTML += option;
+                selectAgendamento.innerHTML += option;
+            });
+        }
+        
+        function salvarAgendamento() {
+            const clienteId = document.getElementById('agendamento-cliente').value;
+            const clienteNome = document.getElementById('agendamento-cliente').options[document.getElementById('agendamento-cliente').selectedIndex].text;
+            const servicoId = document.getElementById('agendamento-servico').value;
+            const servicoNome = document.getElementById('agendamento-servico').options[document.getElementById('agendamento-servico').selectedIndex].text.split(' (')[0];
+            const profissionalId = document.getElementById('agendamento-profissional').value;
+            const profissionalNome = document.getElementById('agendamento-profissional').options[document.getElementById('agendamento-profissional').selectedIndex].text;
+            const data = new Date(document.getElementById('agendamento-data').value);
+            const duracao = parseInt(document.getElementById('agendamento-duracao').value);
+            
+            // Encontra o serviço selecionado para pegar o valor
+            const servico = servicosDisponiveis.find(s => s.id == servicoId);
+            
+            db.collection("agendamentos").add({
+                clienteId: clienteId,
+                clienteNome: clienteNome,
+                servicoId: servicoId,
+                servicoNome: servicoNome,
+                profissionalId: profissionalId,
+                profissionalNome: profissionalNome,
+                data: data,
+                duracao: duracao,
+                valor: servico.valor,
+                status: "agendado",
+                dataCadastro: new Date()
+            }).then(() => {
+                alert("Agendamento realizado com sucesso!");
+                document.getElementById('form-agendamento').reset();
+                $('#novo-agendamento-modal').modal('hide');
+                calendar.refetchEvents();
+            }).catch(error => {
+                alert("Erro ao agendar: " + error.message);
+            });
+        }
+        
+        function atualizarAgendamento(id, dados) {
+            db.collection("agendamentos").doc(id).update(dados)
+                .then(() => {
+                    calendar.refetchEvents();
+                });
+        }
+        
+        function carregarRelatorios() {
+            const mesAno = document.getElementById('relatorio-mes').value;
+            const profissionalId = document.getElementById('relatorio-profissional').value;
+            
+            if (!mesAno) return;
+            
+            const [ano, mes] = mesAno.split('-');
+            const inicio = new Date(ano, mes - 1, 1);
+            const fim = new Date(ano, mes, 0, 23, 59, 59);
+            
+            let query = db.collection("comandas")
+                .where("data", ">=", inicio)
+                .where("data", "<=", fim);
+                
+            if (profissionalId !== "todos") {
+                query = query.where("profissionalId", "==", profissionalId);
+            }
+            
+            query.get().then(querySnapshot => {
+                let totalRecebido = 0;
+                let totalServicos = 0;
+                const servicosCount = {};
+                
+                querySnapshot.forEach(doc => {
+                    const comanda = doc.data();
+                    totalRecebido += comanda.valor;
+                    totalServicos++;
+                    
+                    // Contagem por serviço
+                    if (servicosCount[comanda.servico]) {
+                        servicosCount[comanda.servico]++;
+                    } else {
+                        servicosCount[comanda.servico] = 1;
+                    }
+                });
+                
+                // Atualiza os totais
+                document.getElementById('total-recebido').textContent = formatarMoeda(totalRecebido);
+                document.getElementById('total-servicos').textContent = totalServicos;
+                document.getElementById('media-servico').textContent = formatarMoeda(totalServicos > 0 ? totalRecebido / totalServicos : 0);
+                
+                // Atualiza gráfico de serviços
+                updateServicosChart(servicosCount);
+                
+                // Carrega gráfico de evolução semanal
+                carregarEvolucaoSemanal(ano, mes, profissionalId);
+            });
+        }
+        
+        function updateServicosChart(servicosCount) {
+            const ctx = document.getElementById('grafico-servicos').getContext('2d');
+            
+            const labels = Object.keys(servicosCount);
+            const data = Object.values(servicosCount);
+            const cores = labels.map((_, i) => `hsl(${i * 360 / labels.length}, 70%, 50%)`);
+            
+            if (window.servicosChart) {
+                window.servicosChart.data.labels = labels;
+                window.servicosChart.data.datasets[0].data = data;
+                window.servicosChart.data.datasets[0].backgroundColor = cores;
+                window.servicosChart.update();
+            } else {
+                window.servicosChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Serviços Realizados',
+                            data: data,
+                            backgroundColor: cores,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function carregarEvolucaoSemanal(ano, mes, profissionalId) {
+            const inicio = new Date(ano, mes - 1, 1);
+            const fim = new Date(ano, mes, 0, 23, 59, 59);
+            
+            let query = db.collection("comandas")
+                .where("data", ">=", inicio)
+                .where("data", "<=", fim);
+                
+            if (profissionalId !== "todos") {
+                query = query.where("profissionalId", "==", profissionalId);
+            }
+            
+            query.get().then(querySnapshot => {
+                const semanas = {};
+                const diasNoMes = new Date(ano, mes, 0).getDate();
+                
+                // Inicializa as semanas
+                for (let dia = 1; dia <= diasNoMes; dia++) {
+                    const data = new Date(ano, mes - 1, dia);
+                    const semana = Math.ceil(dia / 7);
+                    
+                    if (!semanas[semana]) {
+                        semanas[semana] = {
+                            total: 0,
+                            dias: {}
+                        };
+                    }
+                    
+                    semanas[semana].dias[data.getDay()] = 0; // Inicializa cada dia
+                }
+                
+                // Preenche com os dados
+                querySnapshot.forEach(doc => {
+                    const comanda = doc.data();
+                    const data = comanda.data.toDate();
+                    const diaSemana = data.getDay();
+                    const semana = Math.ceil(data.getDate() / 7);
+                    
+                    semanas[semana].total += comanda.valor;
+                    semanas[semana].dias[diaSemana] = (semanas[semana].dias[diaSemana] || 0) + comanda.valor;
+                });
+                
+                // Prepara dados para o gráfico
+                const labels = Object.keys(semanas).map(sem => `Semana ${sem}`);
+                const data = Object.values(semanas).map(sem => sem.total);
+                
+                updateEvolucaoChart(labels, data);
+            });
+        }
+        
+        function updateEvolucaoChart(labels, data) {
+            const ctx = document.getElementById('grafico-evolucao').getContext('2d');
+            
+            if (window.evolucaoChart) {
+                window.evolucaoChart.data.labels = labels;
+                window.evolucaoChart.data.datasets[0].data = data;
+                window.evolucaoChart.update();
+            } else {
+                window.evolucaoChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Faturamento Semanal',
+                            data: data,
+                            backgroundColor: 'rgba(156, 39, 176, 0.2)',
+                            borderColor: 'rgba(156, 39, 176, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true
