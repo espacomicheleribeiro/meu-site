@@ -1,5 +1,3 @@
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 <script>
     // Configuração do Firebase (substitua com suas credenciais)
 const firebaseConfig = {
@@ -9,47 +7,60 @@ const firebaseConfig = {
   storageBucket: "aprendendo-a9a8b.firebasestorage.app",
   messagingSenderId: "1026606384841",
   appId: "1:1026606384841:web:6a81256940c13ee149ef18",
-  measurementId: "G-46P5GW2BY3"
+ // measurementId: "G-46P5GW2BY3"
 };
 
     // Inicialize o Firebase
-    firebase.initializeApp(firebaseConfig);
+    const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Função para salvar a comanda no Firestore
-    async function salvarComandaNoFirebase(comanda) {
-        try {
-            await db.collection("comandas").add(comanda);
-            console.log("Comanda salva no Firebase!");
-        } catch (error) {
-            console.error("Erro ao salvar:", error);
-            alert("Erro ao salvar a comanda. Verifique o console.");
-        }
+    // Funções de formatação
+    function formatarData(data) {
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        return `${dia}/${mes}/${ano}`;
     }
-
-    // Função formatar moeda (mantida do seu código original)
+    
+    function formatarHora(data) {
+        const horas = String(data.getHours()).padStart(2, '0');
+        const minutos = String(data.getMinutes()).padStart(2, '0');
+        return `${horas}:${minutos}`;
+    }
+    
     function formatarMoeda(valor) {
         return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
     }
 
-    // Função gerar comanda (atualizada para salvar no Firebase)
+    // Função para salvar a comanda no Firebase
+    async function salvarComanda(comandaData) {
+        try {
+            await db.collection("comandas").add(comandaData);
+            console.log("Comanda salva com sucesso no Firebase!");
+        } catch (error) {
+            console.error("Erro ao salvar comanda:", error);
+            alert("Ocorreu um erro ao salvar a comanda. Verifique o console para mais detalhes.");
+        }
+    }
+
+    // Gerar a comanda
     async function gerarComanda() {
         const cliente = document.getElementById('cliente').value;
         const profissional = document.getElementById('profissional').value;
         const servico = document.getElementById('servico').value;
         const detalhe = document.getElementById('detalhe_servico').value;
-        const valor = document.getElementById('valor').value;
-        const porcentagem = document.getElementById('porcentagem').value;
+        const valor = parseFloat(document.getElementById('valor').value);
+        const porcentagem = parseFloat(document.getElementById('porcentagem').value);
         
-        if (!cliente || !profissional || !servico || !valor || !porcentagem) {
-            alert('Por favor, preencha todos os campos obrigatórios!');
+        if (!cliente || !profissional || !servico || isNaN(valor) || isNaN(porcentagem)) {
+            alert('Por favor, preencha todos os campos obrigatórios corretamente!');
             return;
         }
         
         const agora = new Date();
         const valorProfissional = (valor * porcentagem / 100).toFixed(2);
         
-        // Preencher a comanda na tela (igual ao seu código original)
+        // Preencher a comanda na tela
         document.getElementById('data-comanda').textContent = formatarData(agora);
         document.getElementById('hora-comanda').textContent = formatarHora(agora);
         document.getElementById('cliente-comanda').textContent = cliente;
@@ -63,40 +74,116 @@ const firebaseConfig = {
         
         document.getElementById('comanda').style.display = 'block';
         document.getElementById('action-buttons').style.display = 'flex';
+        
         document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
 
-        // Salvar no Firebase
+        // Preparar dados para salvar no Firebase
         const comandaData = {
             cliente,
             profissional,
             servico,
-            detalhe,
-            valor: parseFloat(valor),
-            porcentagem: parseFloat(porcentagem),
+            detalhe: detalhe || "Não informado",
+            valor,
+            porcentagem,
             valorProfissional: parseFloat(valorProfissional),
             data: firebase.firestore.Timestamp.fromDate(agora),
+            dataFormatada: formatarData(agora),
+            horaFormatada: formatarHora(agora),
+            status: "pendente" // Você pode adicionar mais status depois
         };
 
-        await salvarComandaNoFirebase(comandaData);
+        // Salvar no Firebase
+        await salvarComanda(comandaData);
     }
 
-    // Funções de formatação de data/hora (mantidas do seu código original)
-    function formatarData(data) {
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const ano = data.getFullYear();
-        return `${dia}/${mes}/${ano}`;
-    }
-    
-    function formatarHora(data) {
-        const horas = String(data.getHours()).padStart(2, '0');
-        const minutos = String(data.getMinutes()).padStart(2, '0');
-        return `${horas}:${minutos}`;
+    // Função para compartilhar a comanda
+    async function compartilharComanda() {
+        try {
+            const btn = document.querySelector('.share-btn');
+            const originalText = btn.innerHTML;
+            
+            // Mostrar loading
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando...';
+            btn.disabled = true;
+            
+            // Verificar se a API de compartilhamento está disponível
+            if (navigator.share) {
+                // Capturar a comanda como imagem
+                const element = document.getElementById('comanda');
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    backgroundColor: '#FFFFFF'
+                });
+                
+                // Converter para blob
+                canvas.toBlob(async function(blob) {
+                    // Criar arquivo para compartilhar
+                    const file = new File([blob], 'comanda_salao.png', { type: 'image/png' });
+                    
+                    // Dados para compartilhar
+                    const cliente = document.getElementById('cliente-comanda').textContent;
+                    const shareData = {
+                        title: 'Comanda do Salão de Beleza',
+                        text: `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro`,
+                        files: [file]
+                    };
+                    
+                    try {
+                        await navigator.share(shareData);
+                    } catch (err) {
+                        console.log('Erro ao compartilhar:', err);
+                        fallbackShare();
+                    }
+                    
+                    // Restaurar botão
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 'image/png');
+            } else {
+                fallbackShare();
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Erro ao compartilhar:', error);
+            fallbackShare();
+            
+            // Restaurar botão em caso de erro
+            const btn = document.querySelector('.share-btn');
+            btn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar';
+            btn.disabled = false;
+        }
     }
 
-    // Inicialização (igual ao seu código original)
+    // Fallback para quando a API de compartilhamento não está disponível
+    function fallbackShare() {
+        const cliente = document.getElementById('cliente-comanda').textContent;
+        const texto = `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro\n` +
+                     `Data: ${document.getElementById('data-comanda').textContent}\n` +
+                     `Serviço: ${document.getElementById('servico-comanda').textContent}\n` +
+                     `Valor: ${document.getElementById('valor-comanda').textContent}\n` +
+                     `Porcentagem: ${document.getElementById('porcentagem-comanda').textContent}\n` +
+                     `Valor Profissional: ${document.getElementById('valor-profissional').textContent}\n\n` +
+                     `Endereço: Rua Astrolábio, 123 - Cidade Nova\n` +
+                     `Telefone: (92) 8831-1296`;
+        
+        // Copiar para área de transferência
+        navigator.clipboard.writeText(texto).then(() => {
+            alert('Informações da comanda copiadas para a área de transferência!\nCole em qualquer aplicativo para compartilhar.');
+        }).catch(() => {
+            // Fallback mais básico
+            prompt('Copie o texto abaixo para compartilhar:', texto);
+        });
+    }
+
+    // Inicialização
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('comanda').style.display = 'none';
         document.getElementById('action-buttons').style.display = 'none';
+        
+        // Teste de conexão com o Firebase
+        console.log("Firebase inicializado:", app.name);
     });
 </script>
