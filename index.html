@@ -1,18 +1,11 @@
-<!DOCTYPE html>
+<!DOCTYPE html> <!-- voltando..... -->
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comanda Salão de Beleza</title>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-    <!-- html2canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- CSS COMPLETO (COPIADO DO SEU ORIGINAL) -->
     <style>
         * {
             box-sizing: border-box;
@@ -232,7 +225,6 @@
     </style>
 </head>
 <body>
-    <!-- HTML COMPLETO (COPIADO DO SEU ORIGINAL) -->
     <div class="container">
         <div class="logo no-print">
             <img src="MICHA.jpeg" alt="Logo Salão de Beleza">
@@ -360,23 +352,7 @@
         </div>
     </div>
 
-    <!-- JavaScript com Firebase -->
     <script>
-        // Configuração do Firebase - SUBSTITUA COM SEUS DADOS REAIS!
-const firebaseConfig = {
-  apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
-  authDomain: "aprendendo-a9a8b.firebaseapp.com",
-  projectId: "aprendendo-a9a8b",
-  storageBucket: "aprendendo-a9a8b.firebasestorage.app",
-  messagingSenderId: "1026606384841",
-  appId: "1:1026606384841:web:6a81256940c13ee149ef18",
- // measurementId: "G-46P5GW2BY3"
-};
-
-        // Inicialize o Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
         // Funções de formatação
         function formatarData(data) {
             const dia = String(data.getDate()).padStart(2, '0');
@@ -395,51 +371,23 @@ const firebaseConfig = {
             return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
         }
 
-        // Salvar comanda no Firebase
-        async function salvarComandaFirebase(comandaData) {
-            try {
-                await db.collection("comandas").add(comandaData);
-                console.log("Comanda salva no Firebase!");
-                return true;
-            } catch (error) {
-                console.error("Erro ao salvar comanda:", error);
-                alert("Erro ao salvar no banco de dados. Verifique o console.");
-                return false;
-            }
-        }
-
-        // Gerar comanda (com Firebase)
-        async function gerarComanda() {
-            const cliente = document.getElementById('cliente').value.trim();
+        // Gerar a comanda
+        function gerarComanda() {
+            const cliente = document.getElementById('cliente').value;
             const profissional = document.getElementById('profissional').value;
             const servico = document.getElementById('servico').value;
-            const detalhe = document.getElementById('detalhe_servico').value.trim();
-            const valorInput = document.getElementById('valor').value;
-            const porcentagemInput = document.getElementById('porcentagem').value;
+            const detalhe = document.getElementById('detalhe_servico').value;
+            const valor = document.getElementById('valor').value;
+            const porcentagem = document.getElementById('porcentagem').value;
             
-            // Validações
-            if (!cliente || !profissional || !servico || !valorInput || !porcentagemInput) {
+            if (!cliente || !profissional || !servico || !valor || !porcentagem) {
                 alert('Por favor, preencha todos os campos obrigatórios!');
-                return;
-            }
-            
-            const valor = parseFloat(valorInput);
-            const porcentagem = parseFloat(porcentagemInput);
-            
-            if (isNaN(valor) {
-                alert('Valor inválido! Digite um número válido.');
-                return;
-            }
-            
-            if (isNaN(porcentagem) {
-                alert('Porcentagem inválida! Digite um número válido.');
                 return;
             }
             
             const agora = new Date();
             const valorProfissional = (valor * porcentagem / 100).toFixed(2);
             
-            // Atualizar a interface
             document.getElementById('data-comanda').textContent = formatarData(agora);
             document.getElementById('hora-comanda').textContent = formatarHora(agora);
             document.getElementById('cliente-comanda').textContent = cliente;
@@ -453,37 +401,23 @@ const firebaseConfig = {
             
             document.getElementById('comanda').style.display = 'block';
             document.getElementById('action-buttons').style.display = 'flex';
+            
             document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
-
-            // Preparar dados para o Firebase
-            const comandaData = {
-                cliente,
-                profissional,
-                servico,
-                detalhe: detalhe || "Não informado",
-                valor,
-                porcentagem,
-                valorProfissional: parseFloat(valorProfissional),
-                data: firebase.firestore.Timestamp.fromDate(agora),
-                dataFormatada: formatarData(agora),
-                horaFormatada: formatarHora(agora),
-                status: "ativo"
-            };
-
-            // Salvar no Firebase
-            await salvarComandaFirebase(comandaData);
         }
 
-        // Funções de compartilhamento (mantidas do original)
+        // Função para compartilhar a comanda
         async function compartilharComanda() {
             try {
                 const btn = document.querySelector('.share-btn');
                 const originalText = btn.innerHTML;
                 
+                // Mostrar loading
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando...';
                 btn.disabled = true;
                 
+                // Verificar se a API de compartilhamento está disponível
                 if (navigator.share) {
+                    // Capturar a comanda como imagem
                     const element = document.getElementById('comanda');
                     const canvas = await html2canvas(element, {
                         scale: 2,
@@ -492,8 +426,12 @@ const firebaseConfig = {
                         backgroundColor: '#FFFFFF'
                     });
                     
+                    // Converter para blob
                     canvas.toBlob(async function(blob) {
+                        // Criar arquivo para compartilhar
                         const file = new File([blob], 'comanda_salao.png', { type: 'image/png' });
+                        
+                        // Dados para compartilhar
                         const cliente = document.getElementById('cliente-comanda').textContent;
                         const shareData = {
                             title: 'Comanda do Salão de Beleza',
@@ -508,6 +446,7 @@ const firebaseConfig = {
                             fallbackShare();
                         }
                         
+                        // Restaurar botão
                         btn.innerHTML = originalText;
                         btn.disabled = false;
                     }, 'image/png');
@@ -519,12 +458,15 @@ const firebaseConfig = {
             } catch (error) {
                 console.error('Erro ao compartilhar:', error);
                 fallbackShare();
+                
+                // Restaurar botão em caso de erro
                 const btn = document.querySelector('.share-btn');
                 btn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar';
                 btn.disabled = false;
             }
         }
 
+        // Fallback para quando a API de compartilhamento não está disponível
         function fallbackShare() {
             const cliente = document.getElementById('cliente-comanda').textContent;
             const texto = `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro\n` +
@@ -536,9 +478,11 @@ const firebaseConfig = {
                          `Endereço: Rua Astrolábio, 123 - Cidade Nova\n` +
                          `Telefone: (92) 8831-1296`;
             
+            // Copiar para área de transferência
             navigator.clipboard.writeText(texto).then(() => {
                 alert('Informações da comanda copiadas para a área de transferência!\nCole em qualquer aplicativo para compartilhar.');
             }).catch(() => {
+                // Fallback mais básico
                 prompt('Copie o texto abaixo para compartilhar:', texto);
             });
         }
