@@ -100,51 +100,6 @@
             </tbody>
         </table>
     </div>
-<!-- INICIANDO JAVA -->
-    <script>
-
-       // import {initializeApp} from "firebase/app";
-
-        function cadastrarAluno() {
-            // Obter valores dos campos
-            const nome = document.getElementById('nome').value;
-            const idade = document.getElementById('idade').value;
-            const nota = parseFloat(document.getElementById('nota').value);
-            
-            // Validar campos
-            if (!nome || !idade || isNaN(nota)) {
-                alert('Por favor, preencha todos os campos corretamente!');
-                return;
-            }
-            
-            // Determinar situação
-            let situacao;
-            if (nota >= 6) {
-                situacao = 'Aprovado';
-            } else if (nota >= 4) {
-                situacao = 'Recuperação';
-            } else {
-                situacao = 'Reprovado';
-            }
-            
-            // Adicionar à tabela
-            const tabela = document.getElementById('corpo-tabela');
-            const novaLinha = tabela.insertRow();
-            
-            novaLinha.insertCell(0).textContent = nome;
-            novaLinha.insertCell(1).textContent = idade;
-            novaLinha.insertCell(2).textContent = nota.toFixed(1);
-            novaLinha.insertCell(3).textContent = situacao;
-            
-            // Limpar campos
-            document.getElementById('nome'). value = '';
-            document.getElementById('idade').value = '';
-            document.getElementById('nota'). value = '';
-
-
-          
-    }// fim da função gerar comanda
-    </script>
     <!-- TRATANDO DO BANCO DE DADOS -->
     <script>
          import {initializeApp} from "firebase/app";
@@ -193,7 +148,53 @@
         console.error("Erro ao salvar os dados:", error);
         alert("Erro ao salvar os dados.");
       });
+    </script>    
+<!-- INICIANDO JAVA -->
+    <script>
+
+          function cadastrarAluno() {
+            // Obter valores dos campos
+            const nome = document.getElementById('nome').value;
+            const idade = document.getElementById('idade').value;
+            const nota = parseFloat(document.getElementById('nota').value);
+            
+            // Validar campos
+            if (!nome || !idade || isNaN(nota)) {
+                alert('Por favor, preencha todos os campos corretamente!');
+                return;
+            }
+            
+            // Determinar situação
+            let situacao;
+            if (nota >= 6) {
+                situacao = 'Aprovado';
+            } else if (nota >= 4) {
+                situacao = 'Recuperação';
+            } else {
+                situacao = 'Reprovado';
+            }
+            
+            // Adicionar à tabela
+            const tabela    = document.getElementById('corpo-tabela');
+            const novaLinha = tabela.insertRow();
+            
+            novaLinha.insertCell(0).textContent = nome;
+            novaLinha.insertCell(1).textContent = idade;
+            novaLinha.insertCell(2).textContent = nota.toFixed(1);
+            novaLinha.insertCell(3).textContent = situacao;
+            
+            // Limpar campos
+            document.getElementById('nome'). value = '';
+            document.getElementById('idade').value = '';
+            document.getElementById('nota'). value = '';
+
+              
+
+          
+    }// fim da função gerar comanda
+        
     </script>
+
 
     
  </body>
