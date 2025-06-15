@@ -117,25 +117,6 @@
           };
         const app      = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-
-
-      // ENVIANDO DADOS PARA O BANCO DE DADOS
-      function salvarDadosNoFirebase() {
-      const dados = capturarDadosDoFormulario();
-      const referencia = ref(database, 'escola/alunos' + dados.nota); // Cria uma referência no banco de dados
-
-      set(referencia, {
-         nome:  dados.nome,
-         idade: dados.idade,
-         nota:  dados.nota
-      })
-      .then(() => {
-         alert("Dados salvos com sucesso!");
-      })
-     .catch((error) => {
-        console.error("Erro ao salvar os dados:", error);
-        alert("Erro ao salvar os dados.");
-      });
     </script>
 
     <!--TRATANDO FORMULARIO-->
@@ -177,7 +158,7 @@
             document.getElementById('idade').value = '';
             document.getElementById('nota'). value = '';
 
-    };// fim da função gerar comanda
+    }// fim da função gerar comanda
 
        // CAPITURANDO DADOS DO FORMULÁRIO
        function capturarDadosDoFormulario() {
@@ -191,15 +172,31 @@
             idade: idade,
             nota: nota
         };
-      };
+      }
+    // ENVIANDO DADOS PARA O BANCO DE DADOS
+      function salvarDadosNoFirebase() {
+      const dados = capturarDadosDoFormulario();
+      const referencia = ref(database, 'escola/alunos' + dados.nota); // Cria uma referência no banco de dados
 
+      set(referencia, {
+         nome:  dados.nome,
+         idade: dados.idade,
+         nota:  dados.nota
+      })
+      .then(() => {
+         alert("Dados salvos com sucesso!");
+      })
+     .catch((error) => {
+        console.error("Erro ao salvar os dados:", error);
+        alert("Erro ao salvar os dados.");
+      });
 
     // INVOCA AS FUNÇÕES DE CADASTRO E FORMULÁRIO PARA DATABSE
     function chamaFuncoes() {
        cadastrarAluno();
        capturarDadosDoFormulario();
-    };
-    </script>
+    }
+ </script>
     
  </body>
 </html>
