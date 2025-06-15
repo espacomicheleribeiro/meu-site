@@ -4,36 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Alunos</title>
-    <!-- IMPORTANDO SDKS DO FIREBASE (versão compat) -->
+    <!-- IMPORTANDO SDKS DO FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     
     <style>
-        /* Seus estilos permanecem os mesmos */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #resultados {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
-    <!-- Seu HTML permanece o mesmo -->
+    <h1>Cadastro de Alunos</h1>
     
+    <div class="form-container">
+        <div class="form-group">
+            <label for="nome">Nome do Aluno:</label>
+            <input type="text" id="nome" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="idade">Idade:</label>
+            <input type="number" id="idade" min="5" max="99" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="nota">Nota (0-10):</label>
+            <input type="number" id="nota" min="0" max="10" step="0.1" required>
+        </div>
+        
+        <button onclick="cadastrarAluno()">Cadastrar Aluno</button>
+    </div>
+    
+    <div id="resultados">
+        <h2>Alunos Cadastrados</h2>
+        <table id="tabela-alunos" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px; border: 1px solid #ddd;">Nome</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Idade</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Nota</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Situação</th>
+                </tr>
+            </thead>
+            <tbody id="corpo-tabela">
+                <!-- Alunos serão adicionados aqui via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+<!-- INICIANDO JAVA -->
     <script>
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
-            authDomain: "aprendendo-a9a8b.firebaseapp.com",
-            projectId: "aprendendo-a9a8b",
-            storageBucket: "aprendendo-a9a8b.firebasestorage.app",
-            messagingSenderId: "1026606384841",
-            appId: "1:1026606384841:web:6a81256940c13ee149ef18",
-            measurementId: "G-46P5GW2BY3",
-            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com/" // Adicione esta linha
-        };
-
-        // Inicialize o Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        async function cadastrarAluno() {
+        function cadastrarAluno() {
             // Obter valores dos campos
             const nome = document.getElementById('nome').value;
             const idade = document.getElementById('idade').value;
@@ -64,27 +133,64 @@
             novaLinha.insertCell(2).textContent = nota.toFixed(1);
             novaLinha.insertCell(3).textContent = situacao;
             
-            // Salvar no Firebase
-            try {
-                const referencia = firebase.database().ref('escola/alunos/' + Date.now());
-                await referencia.set({
-                    nome: nome,
-                    idade: idade,
-                    nota: nota,
-                    situacao: situacao,
-                    dataCadastro: firebase.database.ServerValue.TIMESTAMP
-                });
-                alert("Dados salvos com sucesso no Firebase!");
-            } catch (error) {
-                console.error("Erro ao salvar no Firebase:", error);
-                alert("Erro ao salvar os dados no Firebase.");
-            }
-            
             // Limpar campos
-            document.getElementById('nome').value = '';
+            document.getElementById('nome'). value = '';
             document.getElementById('idade').value = '';
-            document.getElementById('nota').value = '';
-        }
+            document.getElementById('nota'). value = '';
+          
+    }// fim da função gerar comanda
     </script>
-</body>
+    <!-- TRATANDO DO BANCO DE DADOS -->
+    <script>
+         import {initializeApp} from "firebase/app";
+         import { getDatabase, ref, set } from "firebase/database";
+         const firebaseConfig = {
+              apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+              authDomain: "aprendendo-a9a8b.firebaseapp.com",
+              projectId: "aprendendo-a9a8b",
+              storageBucket: "aprendendo-a9a8b.firebasestorage.app",
+              messagingSenderId: "1026606384841",
+              appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+              measurementId: "G-46P5GW2BY3"
+          };
+        const app      = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        
+       // CAPITURANDO DADOS DO FORMULÁRIO
+       function capturarDadosDoFormulario() {
+
+       const nome  = document.getElementById("nome").value;
+       const idade = document.getElementById("idade").value;
+       const nota  = document.getElementById("nota").value;
+ 
+       return {
+            nome: nome,
+            idade: idade,
+            nota: nota
+        };
+      }
+
+      // ENVIANDO DADOS PARA O BANCO DE DADOS
+      function salvarDadosNoFirebase() {
+      const dados = capturarDadosDoFormulario();
+      const referencia = ref(database, 'escola/alunos' + dados.email); // Cria uma referência no banco de dados
+
+      set(referencia, {
+         nome:  dados.nome,
+         idade: dados.idade,
+         nota:  dados.nota
+      })
+      .then(() => {
+         alert("Dados salvos com sucesso!");
+      })
+     .catch((error) => {
+        console.error("Erro ao salvar os dados:", error);
+        alert("Erro ao salvar os dados.");
+      });
+    </script>
+
+    
+ </body>
 </html>
+
