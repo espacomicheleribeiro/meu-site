@@ -102,6 +102,9 @@
     </div>
 <!-- INICIANDO JAVA -->
     <script>
+
+        import {initializeApp} from "firebase/app";
+
         function cadastrarAluno() {
             // Obter valores dos campos
             const nome = document.getElementById('nome').value;
@@ -137,6 +140,8 @@
             document.getElementById('nome'). value = '';
             document.getElementById('idade').value = '';
             document.getElementById('nota'). value = '';
+
+
           
     }// fim da função gerar comanda
     </script>
@@ -174,7 +179,7 @@
       // ENVIANDO DADOS PARA O BANCO DE DADOS
       function salvarDadosNoFirebase() {
       const dados = capturarDadosDoFormulario();
-      const referencia = ref(database, 'escola/alunos' + dados.email); // Cria uma referência no banco de dados
+      const referencia = ref(database, 'escola/alunos' + dados.nota); // Cria uma referência no banco de dados
 
       set(referencia, {
          nome:  dados.nome,
@@ -193,4 +198,3 @@
     
  </body>
 </html>
-
