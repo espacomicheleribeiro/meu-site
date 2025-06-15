@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Alunos</title>
-    <!-- IMPORTANDO SDKS DO FIREBASE -->
+    <!-- IMPORTANDO SDKS DO FIREBASE (versão compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     
     <style>
         body {
@@ -81,7 +82,7 @@
             <input type="number" id="nota" min="0" max="10" step="0.1" required>
         </div>
         
-        <button onclick="chamaFuncoes">Cadastrar Aluno</button>
+        <button onclick="chamaFuncoes()">Cadastrar Aluno</button>
     </div>
     
     <div id="resultados">
@@ -101,28 +102,24 @@
         </table>
     </div>
 
-    <!--TRATANDO DO BANCO DE DADOS-->
     <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+            authDomain: "aprendendo-a9a8b.firebaseapp.com",
+            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com",
+            projectId: "aprendendo-a9a8b",
+            storageBucket: "aprendendo-a9a8b.firebasestorage.app",
+            messagingSenderId: "1026606384841",
+            appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+            measurementId: "G-46P5GW2BY3"
+        };
 
-         import {initializeApp} from "firebase/app";
-         import { getDatabase, ref, set } from "firebase/database";
-         const firebaseConfig = {
-              apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
-              authDomain: "aprendendo-a9a8b.firebaseapp.com",
-              projectId: "aprendendo-a9a8b",
-              storageBucket: "aprendendo-a9a8b.firebasestorage.app",
-              messagingSenderId: "1026606384841",
-              appId: "1:1026606384841:web:6a81256940c13ee149ef18",
-              measurementId: "G-46P5GW2BY3"
-          };
-        const app      = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-    </script>
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    <!--TRATANDO FORMULARIO-->
-    <script>
-
-      function cadastrarAluno() {
+        function cadastrarAluno() {
             // Obter valores dos campos
             const nome = document.getElementById('nome').value;
             const idade = document.getElementById('idade').value;
@@ -131,7 +128,7 @@
             // Validar campos
             if (!nome || !idade || isNaN(nota)) {
                 alert('Por favor, preencha todos os campos corretamente!');
-                return;
+                return false; // Retorna false se a validação falhar
             }
             
             // Determinar situação
@@ -154,49 +151,45 @@
             novaLinha.insertCell(3).textContent = situacao;
             
             // Limpar campos
-            document.getElementById('nome'). value = '';
+            document.getElementById('nome').value = '';
             document.getElementById('idade').value = '';
-            document.getElementById('nota'). value = '';
+            document.getElementById('nota').value = '';
+            
+            return {nome, idade, nota, situacao}; // Retorna os dados para uso no Firebase
+        }
 
-    }// fim da função gerar comanda
+        async function salvarDadosNoFirebase(dados) {
+            try {
+                // Cria uma referência no banco de dados com um ID único
+                const referencia = firebase.database().ref('escola/alunos/' + Date.now());
+                
+                await referencia.set({
+                    nome: dados.nome,
+                    idade: dados.idade,
+                    nota: dados.nota,
+                    situacao: dados.situacao,
+                    dataCadastro: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                alert("Dados salvos com sucesso no Firebase!");
+                return true;
+            } catch (error) {
+                console.error("Erro ao salvar os dados:", error);
+                alert("Erro ao salvar os dados no Firebase.");
+                return false;
+            }
+        }
 
-       // CAPITURANDO DADOS DO FORMULÁRIO
-       function capturarDadosDoFormulario() {
-
-       const nome  = document.getElementById("nome").value;
-       const idade = document.getElementById("idade").value;
-       const nota  = document.getElementById("nota").value;
- 
-       return {
-            nome: nome,
-            idade: idade,
-            nota: nota
-        };
-      }
-    // ENVIANDO DADOS PARA O BANCO DE DADOS
-      function salvarDadosNoFirebase() {
-      const dados = capturarDadosDoFormulario();
-      const referencia = ref(database, 'escola/alunos' + dados.nota); // Cria uma referência no banco de dados
-
-      set(referencia, {
-         nome:  dados.nome,
-         idade: dados.idade,
-         nota:  dados.nota
-      })
-      .then(() => {
-         alert("Dados salvos com sucesso!");
-      })
-     .catch((error) => {
-        console.error("Erro ao salvar os dados:", error);
-        alert("Erro ao salvar os dados.");
-      });
-
-    // INVOCA AS FUNÇÕES DE CADASTRO E FORMULÁRIO PARA DATABSE
-    function chamaFuncoes() {
-       cadastrarAluno();
-       capturarDadosDoFormulario();
-    }
- </script>
-    
- </body>
+        async function chamaFuncoes() {
+            // Primeiro cadastra o aluno e obtém os dados
+            const dadosAluno = cadastrarAluno();
+            
+            // Se a validação passou (dadosAluno não é false)
+            if (dadosAluno) {
+                // Salva no Firebase
+                await salvarDadosNoFirebase(dadosAluno);
+            }
+        }
+    </script>
+</body>
 </html>
