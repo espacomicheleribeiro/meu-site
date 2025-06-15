@@ -1,174 +1,553 @@
-<!-- ADICIONE ESTES SCRIPTS NO <head> -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-
-<!-- SUBSTITUA O <script> FINAL POR ESTE CÓDIGO: -->
-<script>
-    // Configuração do Firebase (USE SEUS DADOS REAIS)
-    const firebaseConfig = {
-        apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
-        authDomain: "aprendendo-a9a8b.firebaseapp.com",
-        projectId: "aprendendo-a9a8b",
-        storageBucket: "aprendendo-a9a8b.appspot.com",
-        messagingSenderId: "1026606384841",
-        appId: "1:1026606384841:web:6a81256940c13ee149ef18"
-    };
-
-    // Inicialize o Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // Funções de formatação (MANTIDAS DO SEU CÓDIGO)
-    function formatarData(data) {
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const ano = data.getFullYear();
-        return `${dia}/${mes}/${ano}`;
-    }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comanda Salão de Beleza</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <!-- html2canvas -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    function formatarHora(data) {
-        const horas = String(data.getHours()).padStart(2, '0');
-        const minutos = String(data.getMinutes()).padStart(2, '0');
-        return `${horas}:${minutos}`;
-    }
-    
-    function formatarMoeda(valor) {
-        return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
-    }
-
-    // Função para salvar no Firebase
-    async function salvarComandaFirebase(comandaData) {
-        try {
-            await db.collection("comandas").add(comandaData);
-            console.log("Comanda salva no Firebase!");
-        } catch (error) {
-            console.error("Erro ao salvar comanda:", error);
-        }
-    }
-
-    // Gerar a comanda (MODIFICADA PARA SALVAR NO FIREBASE)
-    async function gerarComanda() {
-        const cliente = document.getElementById('cliente').value;
-        const profissional = document.getElementById('profissional').value;
-        const servico = document.getElementById('servico').value;
-        const detalhe = document.getElementById('detalhe_servico').value;
-        const valor = document.getElementById('valor').value;
-        const porcentagem = document.getElementById('porcentagem').value;
-        
-        if (!cliente || !profissional || !servico || !valor || !porcentagem) {
-            alert('Por favor, preencha todos os campos obrigatórios!');
-            return;
+    <!-- CSS COMPLETO (COPIADO DO SEU ORIGINAL) -->
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
         
-        const agora = new Date();
-        const valorProfissional = (valor * porcentagem / 100).toFixed(2);
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            background-image: url('MICHA.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
         
-        // Atualizar a interface (MANTIDO DO SEU CÓDIGO)
-        document.getElementById('data-comanda').textContent = formatarData(agora);
-        document.getElementById('hora-comanda').textContent = formatarHora(agora);
-        document.getElementById('cliente-comanda').textContent = cliente;
-        document.getElementById('profissional-comanda').textContent = profissional;
-        document.getElementById('servico-comanda').textContent = servico;
-        document.getElementById('detalhe-comanda').textContent = detalhe || "Não informado";
-        document.getElementById('valor-comanda').textContent = formatarMoeda(valor);
-        document.getElementById('porcentagem-comanda').textContent = porcentagem + '%';
-        document.getElementById('valor-profissional').textContent = formatarMoeda(valorProfissional);
-        document.getElementById('total-comanda').textContent = formatarMoeda(valor);
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
         
-        document.getElementById('comanda').style.display = 'block';
-        document.getElementById('action-buttons').style.display = 'flex';
-        document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
-
-        // Dados para salvar no Firebase (NOVO)
-        const comandaData = {
-            cliente,
-            profissional,
-            servico,
-            detalhe: detalhe || "Não informado",
-            valor: parseFloat(valor),
-            porcentagem: parseFloat(porcentagem),
-            valorProfissional: parseFloat(valorProfissional),
-            data: firebase.firestore.Timestamp.fromDate(agora),
-            dataFormatada: formatarData(agora),
-            horaFormatada: formatarHora(agora)
-        };
-
-        // Salvar no Firebase (NOVO)
-        await salvarComandaFirebase(comandaData);
-    }
-
-    // Função para compartilhar a comanda (MANTIDA DO SEU CÓDIGO)
-    async function compartilharComanda() {
-        try {
-            const btn = document.querySelector('.share-btn');
-            const originalText = btn.innerHTML;
+        h1 {
+            text-align: center;
+            color: #9c27b0;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo img {
+            max-width: 150px;
+            height: auto;
+            border-radius: 50%;
+            border: 3px solid #9c27b0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .btn {
+            background-color: #9c27b0;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            background-color: #7b1fa2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .comanda {
+            margin-top: 30px;
+            border-top: 2px dashed #9c27b0;
+            padding-top: 20px;
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .comanda-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .comanda-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .comanda-item {
+            margin-bottom: 10px;
+        }
+        
+        .comanda-item strong {
+            display: inline-block;
+            min-width: 120px;
+            color: #7b1fa2;
+        }
+        
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            color: #9c27b0;
+        }
+        
+        .action-buttons {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            padding: 15px 25px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 5px;
+        }
+        
+        .print-btn {
+            background-color: #4CAF50;
+        }
+        
+        .print-btn:hover {
+            background-color: #3e8e41;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .share-btn {
+            background-color: #2196F3;
+        }
+        
+        .share-btn:hover {
+            background-color: #0b7dda;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando...';
-            btn.disabled = true;
+            body {
+                background-color: white;
+                padding: 0;
+                background-image: none;
+            }
             
-            if (navigator.share) {
-                const element = document.getElementById('comanda');
-                const canvas = await html2canvas(element, {
-                    scale: 2,
-                    logging: false,
-                    useCORS: true,
-                    backgroundColor: '#FFFFFF'
-                });
+            .container {
+                box-shadow: none;
+                padding: 20px;
+                background-color: white;
+            }
+            
+            .comanda {
+                box-shadow: none;
+                border: none;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .comanda-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .comanda-item strong {
+                min-width: 100px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML COMPLETO (COPIADO DO SEU ORIGINAL) -->
+    <div class="container">
+        <div class="logo no-print">
+            <img src="MICHA.jpeg" alt="Logo Salão de Beleza">
+        </div>
+        
+        <h1>Seja mais radiante que o sol da manhã!</h1>
+        
+        <div class="no-print">
+            <div class="form-group">
+                <label for="cliente">Nome do Cliente</label>
+                <input type="text" id="cliente" placeholder="Digite o nome do cliente">
+            </div>
+            
+            <div class="form-group">
+                <label for="profissional">Profissional que atendeu</label>
+                <select id="profissional">
+                    <option value="">Selecione o profissional</option>
+                    <option value="Michele">Michele</option>
+                    <option value="Izabel">Izabel</option>
+                    <option value="Graziela">Graziela</option>                    
+                    <option value="Rudy">Rudy</option>
+                    <option value="George">George</option>
+                    <option value="Rosi">Rosi</option>
+                    <option value="Patrícia">Patrícia</option>
+                    <option value="Rosana">Rosana</option>
+                    <option value="Felícia">Felícia</option>
+                    <option value="Outro">Outro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="servico">Tipo de Serviço</label>
+                <select id="servico">
+                    <option value="">Selecione o serviço</option>
+                    <option value="Unhas">Unhas</option>
+                    <option value="Esmaltação">Esmaltação</option>
+                    <option value="Alongamento">Alongamento</option>
+                    <option value="Spa">Spa</option>
+                    <option value="Cutilagem Russa">Cutilagem Russa</option>
+                    <option value="Corte de cabelo">Corte de cabelo</option>
+                    <option value="Escova">Escova</option>
+                    <option value="Mechas">Mechas</option>
+                    <option value="Coloração">Coloração</option>
+                    <option value="Tratamento">Tratamento</option>
+                    <option value="Progressiva">Progressiva</option>
+                    <option value="Penteado">Penteado</option>
+                    <option value="Maquiagem">Maquiagem</option>
+                    <option value="Sobrancelha">Sobrancelha</option>
+                    <option value="Massagem">Massagem</option>
+                    <option value="Estética Facial">Estética Facial</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="detalhe_servico">Detalhe do Serviço</label>
+                <input type="text" id="detalhe_servico" placeholder="Detalhes adicionais do serviço">
+            </div>
+            
+            <div class="form-group">
+                <label for="valor">Valor (R$)</label>
+                <input type="number" id="valor" placeholder="Digite o valor do serviço" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label for="porcentagem">Porcentagem a Receber (%)</label>
+                <input type="number" id="porcentagem" placeholder="Digite a porcentagem do profissional" min="0" max="100" step="0.01">
+            </div>
+            
+            <button class="btn" onclick="gerarComanda()">Gerar Comanda</button>
+        </div>
+        
+        <div class="comanda" id="comanda">
+            <div class="comanda-header">
+                <h2>Salão Espaço Michele Ribeiro</h2>
+                <p>Rua Astrolábio, 123 - Cidade Nova | Tel: (92) 8831-1296</p>
+            </div>
+            
+            <div class="comanda-details">
+                <div class="comanda-item">
+                    <strong>Data:</strong> <span id="data-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Hora:</strong> <span id="hora-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Cliente:</strong> <span id="cliente-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Profissional:</strong> <span id="profissional-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Serviço:</strong> <span id="servico-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Detalhes:</strong> <span id="detalhe-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Valor Total:</strong> <span id="valor-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Porcentagem a Receber:</strong> <span id="porcentagem-comanda"></span>
+                </div>
+                <div class="comanda-item">
+                    <strong>Valor do Profissional:</strong> <span id="valor-profissional"></span>
+                </div>
+            </div>
+            
+            <div class="total">
+                Total: <span id="total-comanda"></span>
+            </div>
+            
+            <p style="text-align: center; margin-top: 30px; font-style: italic;">
+                Obrigado pela preferência! Volte sempre!
+            </p>
+        </div>
+        
+        <div class="action-buttons no-print" id="action-buttons">
+            <button class="action-btn print-btn" onclick="window.print()">
+                <i class="fas fa-print"></i> Imprimir Comanda
+            </button>
+            <button class="action-btn share-btn" onclick="compartilharComanda()">
+                <i class="fas fa-share-alt"></i> Compartilhar
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript com Firebase -->
+    <script>
+        // Configuração do Firebase - SUBSTITUA COM SEUS DADOS REAIS!
+const firebaseConfig = {
+  apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+  authDomain: "aprendendo-a9a8b.firebaseapp.com",
+  projectId: "aprendendo-a9a8b",
+  storageBucket: "aprendendo-a9a8b.firebasestorage.app",
+  messagingSenderId: "1026606384841",
+  appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+ // measurementId: "G-46P5GW2BY3"
+};
+
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Funções de formatação
+        function formatarData(data) {
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+        
+        function formatarHora(data) {
+            const horas = String(data.getHours()).padStart(2, '0');
+            const minutos = String(data.getMinutes()).padStart(2, '0');
+            return `${horas}:${minutos}`;
+        }
+        
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+        }
+
+        // Salvar comanda no Firebase
+        async function salvarComandaFirebase(comandaData) {
+            try {
+                await db.collection("comandas").add(comandaData);
+                console.log("Comanda salva no Firebase!");
+                return true;
+            } catch (error) {
+                console.error("Erro ao salvar comanda:", error);
+                alert("Erro ao salvar no banco de dados. Verifique o console.");
+                return false;
+            }
+        }
+
+        // Gerar comanda (com Firebase)
+        async function gerarComanda() {
+            const cliente = document.getElementById('cliente').value.trim();
+            const profissional = document.getElementById('profissional').value;
+            const servico = document.getElementById('servico').value;
+            const detalhe = document.getElementById('detalhe_servico').value.trim();
+            const valorInput = document.getElementById('valor').value;
+            const porcentagemInput = document.getElementById('porcentagem').value;
+            
+            // Validações
+            if (!cliente || !profissional || !servico || !valorInput || !porcentagemInput) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            const valor = parseFloat(valorInput);
+            const porcentagem = parseFloat(porcentagemInput);
+            
+            if (isNaN(valor) {
+                alert('Valor inválido! Digite um número válido.');
+                return;
+            }
+            
+            if (isNaN(porcentagem) {
+                alert('Porcentagem inválida! Digite um número válido.');
+                return;
+            }
+            
+            const agora = new Date();
+            const valorProfissional = (valor * porcentagem / 100).toFixed(2);
+            
+            // Atualizar a interface
+            document.getElementById('data-comanda').textContent = formatarData(agora);
+            document.getElementById('hora-comanda').textContent = formatarHora(agora);
+            document.getElementById('cliente-comanda').textContent = cliente;
+            document.getElementById('profissional-comanda').textContent = profissional;
+            document.getElementById('servico-comanda').textContent = servico;
+            document.getElementById('detalhe-comanda').textContent = detalhe || "Não informado";
+            document.getElementById('valor-comanda').textContent = formatarMoeda(valor);
+            document.getElementById('porcentagem-comanda').textContent = porcentagem + '%';
+            document.getElementById('valor-profissional').textContent = formatarMoeda(valorProfissional);
+            document.getElementById('total-comanda').textContent = formatarMoeda(valor);
+            
+            document.getElementById('comanda').style.display = 'block';
+            document.getElementById('action-buttons').style.display = 'flex';
+            document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
+
+            // Preparar dados para o Firebase
+            const comandaData = {
+                cliente,
+                profissional,
+                servico,
+                detalhe: detalhe || "Não informado",
+                valor,
+                porcentagem,
+                valorProfissional: parseFloat(valorProfissional),
+                data: firebase.firestore.Timestamp.fromDate(agora),
+                dataFormatada: formatarData(agora),
+                horaFormatada: formatarHora(agora),
+                status: "ativo"
+            };
+
+            // Salvar no Firebase
+            await salvarComandaFirebase(comandaData);
+        }
+
+        // Funções de compartilhamento (mantidas do original)
+        async function compartilharComanda() {
+            try {
+                const btn = document.querySelector('.share-btn');
+                const originalText = btn.innerHTML;
                 
-                canvas.toBlob(async function(blob) {
-                    const file = new File([blob], 'comanda_salao.png', { type: 'image/png' });
-                    const cliente = document.getElementById('cliente-comanda').textContent;
-                    const shareData = {
-                        title: 'Comanda do Salão de Beleza',
-                        text: `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro`,
-                        files: [file]
-                    };
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando...';
+                btn.disabled = true;
+                
+                if (navigator.share) {
+                    const element = document.getElementById('comanda');
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        logging: false,
+                        useCORS: true,
+                        backgroundColor: '#FFFFFF'
+                    });
                     
-                    try {
-                        await navigator.share(shareData);
-                    } catch (err) {
-                        console.log('Erro ao compartilhar:', err);
-                        fallbackShare();
-                    }
-                    
+                    canvas.toBlob(async function(blob) {
+                        const file = new File([blob], 'comanda_salao.png', { type: 'image/png' });
+                        const cliente = document.getElementById('cliente-comanda').textContent;
+                        const shareData = {
+                            title: 'Comanda do Salão de Beleza',
+                            text: `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro`,
+                            files: [file]
+                        };
+                        
+                        try {
+                            await navigator.share(shareData);
+                        } catch (err) {
+                            console.log('Erro ao compartilhar:', err);
+                            fallbackShare();
+                        }
+                        
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 'image/png');
+                } else {
+                    fallbackShare();
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                }, 'image/png');
-            } else {
+                }
+            } catch (error) {
+                console.error('Erro ao compartilhar:', error);
                 fallbackShare();
-                btn.innerHTML = originalText;
+                const btn = document.querySelector('.share-btn');
+                btn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar';
                 btn.disabled = false;
             }
-        } catch (error) {
-            console.error('Erro ao compartilhar:', error);
-            fallbackShare();
-            const btn = document.querySelector('.share-btn');
-            btn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar';
-            btn.disabled = false;
         }
-    }
 
-    function fallbackShare() {
-        const cliente = document.getElementById('cliente-comanda').textContent;
-        const texto = `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro\n` +
-                     `Data: ${document.getElementById('data-comanda').textContent}\n` +
-                     `Serviço: ${document.getElementById('servico-comanda').textContent}\n` +
-                     `Valor: ${document.getElementById('valor-comanda').textContent}\n` +
-                     `Porcentagem: ${document.getElementById('porcentagem-comanda').textContent}\n` +
-                     `Valor Profissional: ${document.getElementById('valor-profissional').textContent}\n\n` +
-                     `Endereço: Rua Astrolábio, 123 - Cidade Nova\n` +
-                     `Telefone: (92) 8831-1296`;
-        
-        navigator.clipboard.writeText(texto).then(() => {
-            alert('Informações da comanda copiadas para a área de transferência!\nCole em qualquer aplicativo para compartilhar.');
-        }).catch(() => {
-            prompt('Copie o texto abaixo para compartilhar:', texto);
+        function fallbackShare() {
+            const cliente = document.getElementById('cliente-comanda').textContent;
+            const texto = `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro\n` +
+                         `Data: ${document.getElementById('data-comanda').textContent}\n` +
+                         `Serviço: ${document.getElementById('servico-comanda').textContent}\n` +
+                         `Valor: ${document.getElementById('valor-comanda').textContent}\n` +
+                         `Porcentagem: ${document.getElementById('porcentagem-comanda').textContent}\n` +
+                         `Valor Profissional: ${document.getElementById('valor-profissional').textContent}\n\n` +
+                         `Endereço: Rua Astrolábio, 123 - Cidade Nova\n` +
+                         `Telefone: (92) 8831-1296`;
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('Informações da comanda copiadas para a área de transferência!\nCole em qualquer aplicativo para compartilhar.');
+            }).catch(() => {
+                prompt('Copie o texto abaixo para compartilhar:', texto);
+            });
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('comanda').style.display = 'none';
+            document.getElementById('action-buttons').style.display = 'none';
         });
-    }
-
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('comanda').style.display = 'none';
-        document.getElementById('action-buttons').style.display = 'none';
-    });
-</script>
+    </script>
+</body>
+</html>
