@@ -158,7 +158,7 @@
             return {nome, idade, nota, situacao}; // Retorna os dados para uso no Firebase
         }
 
-         function salvarDadosNoFirebase(dados) {
+       async function salvarDadosNoFirebase(dados) {
             try {
                 // Cria uma referência no banco de dados com um ID único
                 const referencia = firebase.database().ref('escola/alunos/' + Date.now());
