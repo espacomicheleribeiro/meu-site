@@ -134,6 +134,54 @@
             document.getElementById('idade').value = '';
             document.getElementById('nota').value = '';
         }
+        // CONECTANDO COM O BANCO DE DADOS
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, set } from "firebase/database";
+
+        const firebaseConfig = {
+        // Seu config do Firebase aqui
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        
+       // CAPITURANDO DADOS DO FORMULÁRIO
+       function capturarDadosDoFormulario() {
+
+       const nome  = document.getElementById("nome").value;
+       const idade = document.getElementById("idade").value;
+       const nota  = document.getElementById("nota").value;
+ 
+       return {
+            nome: nome,
+            idade: idade,
+            nota: nota
+        };
+      }
+
+      // ENVIANDO DADOS PARA O BANCO DE DADOS
+
+      function salvarDadosNoFirebase() {
+      const dados = capturarDadosDoFormulario();
+      const referencia = ref(database, 'escola/' + dados.email); // Cria uma referência no banco de dados
+
+      set(referencia, {
+         nome:  dados.nome,
+         idade: dados.idade,
+         nota:  dados.nota
+      })
+      .then(() => {
+         alert("Dados salvos com sucesso!");
+      })
+     .catch((error) => {
+        console.error("Erro ao salvar os dados:", error);
+        alert("Erro ao salvar os dados.");
+      });
+}
+
+
+
     </script>
 </body>
 </html>
