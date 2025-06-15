@@ -139,8 +139,14 @@
         import { getDatabase, ref, set } from "firebase/database";
 
         const firebaseConfig = {
-        // Seu config do Firebase aqui
-        };
+              apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+              authDomain: "aprendendo-a9a8b.firebaseapp.com",
+              projectId: "aprendendo-a9a8b",
+              storageBucket: "aprendendo-a9a8b.firebasestorage.app",
+              messagingSenderId: "1026606384841",
+              appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+              measurementId: "G-46P5GW2BY3"
+       };
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
@@ -178,7 +184,8 @@
         console.error("Erro ao salvar os dados:", error);
         alert("Erro ao salvar os dados.");
       });
-        }
+          
+    }// fim da função gerar comanda
 
     </script>
 
