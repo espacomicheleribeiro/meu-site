@@ -1,9 +1,12 @@
-<!DOCTYPE html> <!-- voltando..... -->
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comanda Salão de Beleza</title>
+    <!-- IMPORTANDO SDKS DO FIREBASE (versão compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -353,6 +356,22 @@
     </div>
 
     <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+            authDomain: "aprendendo-a9a8b.firebaseapp.com",
+            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com",
+            projectId: "aprendendo-a9a8b",
+            storageBucket: "aprendendo-a9a8b.firebasestorage.app",
+            messagingSenderId: "1026606384841",
+            appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+            measurementId: "G-46P5GW2BY3"
+        };
+
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         // Funções de formatação
         function formatarData(data) {
             const dia = String(data.getDate()).padStart(2, '0');
@@ -371,38 +390,69 @@
             return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
         }
 
-        // Gerar a comanda
-        function gerarComanda() {
-            const cliente = document.getElementById('cliente').value;
-            const profissional = document.getElementById('profissional').value;
-            const servico = document.getElementById('servico').value;
-            const detalhe = document.getElementById('detalhe_servico').value;
-            const valor = document.getElementById('valor').value;
-            const porcentagem = document.getElementById('porcentagem').value;
-            
-            if (!cliente || !profissional || !servico || !valor || !porcentagem) {
-                alert('Por favor, preencha todos os campos obrigatórios!');
-                return;
+        // Gerar a comanda e salvar no Firebase
+        async function gerarComanda() {
+            try {
+                const cliente = document.getElementById('cliente').value;
+                const profissional = document.getElementById('profissional').value;
+                const servico = document.getElementById('servico').value;
+                const detalhe = document.getElementById('detalhe_servico').value;
+                const valor = parseFloat(document.getElementById('valor').value);
+                const porcentagem = parseFloat(document.getElementById('porcentagem').value);
+                
+                // Validação dos campos
+                if (!cliente || !profissional || !servico || isNaN(valor) || isNaN(porcentagem)) {
+                    alert('Por favor, preencha todos os campos obrigatórios corretamente!');
+                    return null;
+                }
+                
+                const agora = new Date();
+                const valorProfissional = (valor * porcentagem / 100).toFixed(2);
+                const dataFormatada = formatarData(agora);
+                const horaFormatada = formatarHora(agora);
+                
+                // Atualizar a interface
+                document.getElementById('data-comanda').textContent = dataFormatada;
+                document.getElementById('hora-comanda').textContent = horaFormatada;
+                document.getElementById('cliente-comanda').textContent = cliente;
+                document.getElementById('profissional-comanda').textContent = profissional;
+                document.getElementById('servico-comanda').textContent = servico;
+                document.getElementById('detalhe-comanda').textContent = detalhe || "Não informado";
+                document.getElementById('valor-comanda').textContent = formatarMoeda(valor);
+                document.getElementById('porcentagem-comanda').textContent = porcentagem + '%';
+                document.getElementById('valor-profissional').textContent = formatarMoeda(valorProfissional);
+                document.getElementById('total-comanda').textContent = formatarMoeda(valor);
+                
+                document.getElementById('comanda').style.display = 'block';
+                document.getElementById('action-buttons').style.display = 'flex';
+                document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
+                
+                // Preparar dados para o Firebase
+                const dadosComanda = {
+                    cliente,
+                    profissional,
+                    servico,
+                    detalhe: detalhe || "Não informado",
+                    valor,
+                    porcentagem,
+                    valorProfissional: parseFloat(valorProfissional),
+                    data: dataFormatada,
+                    hora: horaFormatada,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+                
+                // Salvar no Firebase
+                const novaRef = database.ref('SALAO_MICHELE/comandas').push();
+                await novaRef.set(dadosComanda);
+                console.log('Comanda salva com ID:', novaRef.key);
+                
+                alert('Comanda gerada e salva com sucesso!');
+                return dadosComanda;
+            } catch (error) {
+                console.error('Erro ao gerar comanda:', error);
+                alert('Erro ao salvar comanda: ' + error.message);
+                return null;
             }
-            
-            const agora = new Date();
-            const valorProfissional = (valor * porcentagem / 100).toFixed(2);
-            
-            document.getElementById('data-comanda').textContent = formatarData(agora);
-            document.getElementById('hora-comanda').textContent = formatarHora(agora);
-            document.getElementById('cliente-comanda').textContent = cliente;
-            document.getElementById('profissional-comanda').textContent = profissional;
-            document.getElementById('servico-comanda').textContent = servico;
-            document.getElementById('detalhe-comanda').textContent = detalhe || "Não informado";
-            document.getElementById('valor-comanda').textContent = formatarMoeda(valor);
-            document.getElementById('porcentagem-comanda').textContent = porcentagem + '%';
-            document.getElementById('valor-profissional').textContent = formatarMoeda(valorProfissional);
-            document.getElementById('total-comanda').textContent = formatarMoeda(valor);
-            
-            document.getElementById('comanda').style.display = 'block';
-            document.getElementById('action-buttons').style.display = 'flex';
-            
-            document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Função para compartilhar a comanda
