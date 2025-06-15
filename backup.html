@@ -81,7 +81,7 @@
             <input type="number" id="nota" min="0" max="10" step="0.1" required>
         </div>
         
-        <button onclick="cadastrarAluno()">Cadastrar Aluno</button>
+        <button onclick="chamaFuncoes">Cadastrar Aluno</button>
     </div>
     
     <div id="resultados">
@@ -103,6 +103,7 @@
 
     <!-- TRATANDO DO BANCO DE DADOS -->
     <script>
+
          import {initializeApp} from "firebase/app";
          import { getDatabase, ref, set } from "firebase/database";
          const firebaseConfig = {
@@ -136,10 +137,12 @@
         alert("Erro ao salvar os dados.");
       });
     </script>
-    <script>
-        
 
-function cadastrarAluno() {
+    // TRATANDO FORMULARIO
+    <script>
+
+
+      function cadastrarAluno() {
             // Obter valores dos campos
             const nome = document.getElementById('nome').value;
             const idade = document.getElementById('idade').value;
