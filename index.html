@@ -1,5 +1,44 @@
-<script>
-    // Configuração do Firebase (substitua com suas credenciais)
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comanda Salão de Beleza</title>
+    <!-- Adicione os SDKs do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Seus estilos CSS permanecem os mesmos */
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            background-image: url('MICHA.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        /* ... (mantenha todo o restante do seu CSS) ... */
+    </style>
+</head>
+<body>
+    <!-- Seu HTML permanece exatamente o mesmo -->
+    <div class="container">
+        <!-- ... todo o conteúdo HTML existente ... -->
+    </div>
+
+    <script>
+        // Configuração do Firebase - SUBSTITUA COM SEUS DADOS!
 const firebaseConfig = {
   apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
   authDomain: "aprendendo-a9a8b.firebaseapp.com",
@@ -10,180 +49,192 @@ const firebaseConfig = {
  // measurementId: "G-46P5GW2BY3"
 };
 
-    // Inicialize o Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    // Funções de formatação
-    function formatarData(data) {
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const ano = data.getFullYear();
-        return `${dia}/${mes}/${ano}`;
-    }
-    
-    function formatarHora(data) {
-        const horas = String(data.getHours()).padStart(2, '0');
-        const minutos = String(data.getMinutes()).padStart(2, '0');
-        return `${horas}:${minutos}`;
-    }
-    
-    function formatarMoeda(valor) {
-        return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
-    }
-
-    // Função para salvar a comanda no Firebase
-    async function salvarComanda(comandaData) {
-        try {
-            await db.collection("comandas").add(comandaData);
-            console.log("Comanda salva com sucesso no Firebase!");
-        } catch (error) {
-            console.error("Erro ao salvar comanda:", error);
-            alert("Ocorreu um erro ao salvar a comanda. Verifique o console para mais detalhes.");
-        }
-    }
-
-    // Gerar a comanda
-    async function gerarComanda() {
-        const cliente = document.getElementById('cliente').value;
-        const profissional = document.getElementById('profissional').value;
-        const servico = document.getElementById('servico').value;
-        const detalhe = document.getElementById('detalhe_servico').value;
-        const valor = parseFloat(document.getElementById('valor').value);
-        const porcentagem = parseFloat(document.getElementById('porcentagem').value);
-        
-        if (!cliente || !profissional || !servico || isNaN(valor) || isNaN(porcentagem)) {
-            alert('Por favor, preencha todos os campos obrigatórios corretamente!');
-            return;
+        // Funções de formatação (mantidas do seu código original)
+        function formatarData(data) {
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            return `${dia}/${mes}/${ano}`;
         }
         
-        const agora = new Date();
-        const valorProfissional = (valor * porcentagem / 100).toFixed(2);
+        function formatarHora(data) {
+            const horas = String(data.getHours()).padStart(2, '0');
+            const minutos = String(data.getMinutes()).padStart(2, '0');
+            return `${horas}:${minutos}`;
+        }
         
-        // Preencher a comanda na tela
-        document.getElementById('data-comanda').textContent = formatarData(agora);
-        document.getElementById('hora-comanda').textContent = formatarHora(agora);
-        document.getElementById('cliente-comanda').textContent = cliente;
-        document.getElementById('profissional-comanda').textContent = profissional;
-        document.getElementById('servico-comanda').textContent = servico;
-        document.getElementById('detalhe-comanda').textContent = detalhe || "Não informado";
-        document.getElementById('valor-comanda').textContent = formatarMoeda(valor);
-        document.getElementById('porcentagem-comanda').textContent = porcentagem + '%';
-        document.getElementById('valor-profissional').textContent = formatarMoeda(valorProfissional);
-        document.getElementById('total-comanda').textContent = formatarMoeda(valor);
-        
-        document.getElementById('comanda').style.display = 'block';
-        document.getElementById('action-buttons').style.display = 'flex';
-        
-        document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+        }
 
-        // Preparar dados para salvar no Firebase
-        const comandaData = {
-            cliente,
-            profissional,
-            servico,
-            detalhe: detalhe || "Não informado",
-            valor,
-            porcentagem,
-            valorProfissional: parseFloat(valorProfissional),
-            data: firebase.firestore.Timestamp.fromDate(agora),
-            dataFormatada: formatarData(agora),
-            horaFormatada: formatarHora(agora),
-            status: "pendente" // Você pode adicionar mais status depois
-        };
+        // Função para salvar a comanda no Firebase
+        async function salvarComandaFirebase(comandaData) {
+            try {
+                await db.collection("comandas").add(comandaData);
+                console.log("Comanda salva no Firebase:", comandaData);
+                return true;
+            } catch (error) {
+                console.error("Erro ao salvar comanda:", error);
+                alert("Erro ao salvar comanda no banco de dados. Verifique o console.");
+                return false;
+            }
+        }
 
-        // Salvar no Firebase
-        await salvarComanda(comandaData);
-    }
-
-    // Função para compartilhar a comanda
-    async function compartilharComanda() {
-        try {
-            const btn = document.querySelector('.share-btn');
-            const originalText = btn.innerHTML;
+        // Gerar a comanda (atualizada para salvar no Firebase)
+        async function gerarComanda() {
+            const cliente = document.getElementById('cliente').value.trim();
+            const profissional = document.getElementById('profissional').value;
+            const servico = document.getElementById('servico').value;
+            const detalhe = document.getElementById('detalhe_servico').value.trim();
+            const valorInput = document.getElementById('valor').value;
+            const porcentagemInput = document.getElementById('porcentagem').value;
             
-            // Mostrar loading
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando...';
-            btn.disabled = true;
+            // Validações
+            if (!cliente || !profissional || !servico || !valorInput || !porcentagemInput) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return;
+            }
             
-            // Verificar se a API de compartilhamento está disponível
-            if (navigator.share) {
-                // Capturar a comanda como imagem
-                const element = document.getElementById('comanda');
-                const canvas = await html2canvas(element, {
-                    scale: 2,
-                    logging: false,
-                    useCORS: true,
-                    backgroundColor: '#FFFFFF'
-                });
+            const valor = parseFloat(valorInput);
+            const porcentagem = parseFloat(porcentagemInput);
+            
+            if (isNaN(valor) {
+                alert('Valor inválido! Digite um número válido.');
+                return;
+            }
+            
+            if (isNaN(porcentagem) || porcentagem < 0 || porcentagem > 100) {
+                alert('Porcentagem inválida! Digite um valor entre 0 e 100.');
+                return;
+            }
+            
+            const agora = new Date();
+            const valorProfissional = (valor * porcentagem / 100).toFixed(2);
+            
+            // Atualizar a interface
+            document.getElementById('data-comanda').textContent = formatarData(agora);
+            document.getElementById('hora-comanda').textContent = formatarHora(agora);
+            document.getElementById('cliente-comanda').textContent = cliente;
+            document.getElementById('profissional-comanda').textContent = profissional;
+            document.getElementById('servico-comanda').textContent = servico;
+            document.getElementById('detalhe-comanda').textContent = detalhe || "Não informado";
+            document.getElementById('valor-comanda').textContent = formatarMoeda(valor);
+            document.getElementById('porcentagem-comanda').textContent = porcentagem + '%';
+            document.getElementById('valor-profissional').textContent = formatarMoeda(valorProfissional);
+            document.getElementById('total-comanda').textContent = formatarMoeda(valor);
+            
+            document.getElementById('comanda').style.display = 'block';
+            document.getElementById('action-buttons').style.display = 'flex';
+            document.getElementById('comanda').scrollIntoView({ behavior: 'smooth' });
+
+            // Preparar dados para o Firebase
+            const comandaData = {
+                cliente,
+                profissional,
+                servico,
+                detalhe: detalhe || "Não informado",
+                valor,
+                porcentagem,
+                valorProfissional: parseFloat(valorProfissional),
+                data: firebase.firestore.Timestamp.fromDate(agora),
+                dataFormatada: formatarData(agora),
+                horaFormatada: formatarHora(agora),
+                status: "ativo"
+            };
+
+            // Salvar no Firebase
+            const salvou = await salvarComandaFirebase(comandaData);
+            
+            if (salvou) {
+                // Opcional: Limpar campos após salvar
+                document.getElementById('cliente').value = '';
+                document.getElementById('detalhe_servico').value = '';
+                document.getElementById('valor').value = '';
+                document.getElementById('porcentagem').value = '';
+            }
+        }
+
+        // Função para compartilhar a comanda (mantida do seu código original)
+        async function compartilharComanda() {
+            try {
+                const btn = document.querySelector('.share-btn');
+                const originalText = btn.innerHTML;
                 
-                // Converter para blob
-                canvas.toBlob(async function(blob) {
-                    // Criar arquivo para compartilhar
-                    const file = new File([blob], 'comanda_salao.png', { type: 'image/png' });
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando...';
+                btn.disabled = true;
+                
+                if (navigator.share) {
+                    const element = document.getElementById('comanda');
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        logging: false,
+                        useCORS: true,
+                        backgroundColor: '#FFFFFF'
+                    });
                     
-                    // Dados para compartilhar
-                    const cliente = document.getElementById('cliente-comanda').textContent;
-                    const shareData = {
-                        title: 'Comanda do Salão de Beleza',
-                        text: `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro`,
-                        files: [file]
-                    };
-                    
-                    try {
-                        await navigator.share(shareData);
-                    } catch (err) {
-                        console.log('Erro ao compartilhar:', err);
-                        fallbackShare();
-                    }
-                    
-                    // Restaurar botão
+                    canvas.toBlob(async function(blob) {
+                        const file = new File([blob], 'comanda_salao.png', { type: 'image/png' });
+                        const cliente = document.getElementById('cliente-comanda').textContent;
+                        const shareData = {
+                            title: 'Comanda do Salão de Beleza',
+                            text: `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro`,
+                            files: [file]
+                        };
+                        
+                        try {
+                            await navigator.share(shareData);
+                        } catch (err) {
+                            console.log('Erro ao compartilhar:', err);
+                            fallbackShare();
+                        }
+                        
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 'image/png');
+                } else {
+                    fallbackShare();
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                }, 'image/png');
-            } else {
+                }
+            } catch (error) {
+                console.error('Erro ao compartilhar:', error);
                 fallbackShare();
-                btn.innerHTML = originalText;
+                const btn = document.querySelector('.share-btn');
+                btn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar';
                 btn.disabled = false;
             }
-        } catch (error) {
-            console.error('Erro ao compartilhar:', error);
-            fallbackShare();
-            
-            // Restaurar botão em caso de erro
-            const btn = document.querySelector('.share-btn');
-            btn.innerHTML = '<i class="fas fa-share-alt"></i> Compartilhar';
-            btn.disabled = false;
         }
-    }
 
-    // Fallback para quando a API de compartilhamento não está disponível
-    function fallbackShare() {
-        const cliente = document.getElementById('cliente-comanda').textContent;
-        const texto = `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro\n` +
-                     `Data: ${document.getElementById('data-comanda').textContent}\n` +
-                     `Serviço: ${document.getElementById('servico-comanda').textContent}\n` +
-                     `Valor: ${document.getElementById('valor-comanda').textContent}\n` +
-                     `Porcentagem: ${document.getElementById('porcentagem-comanda').textContent}\n` +
-                     `Valor Profissional: ${document.getElementById('valor-profissional').textContent}\n\n` +
-                     `Endereço: Rua Astrolábio, 123 - Cidade Nova\n` +
-                     `Telefone: (92) 8831-1296`;
-        
-        // Copiar para área de transferência
-        navigator.clipboard.writeText(texto).then(() => {
-            alert('Informações da comanda copiadas para a área de transferência!\nCole em qualquer aplicativo para compartilhar.');
-        }).catch(() => {
-            // Fallback mais básico
-            prompt('Copie o texto abaixo para compartilhar:', texto);
+        function fallbackShare() {
+            const cliente = document.getElementById('cliente-comanda').textContent;
+            const texto = `Comanda do cliente ${cliente} - Salão Espaço Michele Ribeiro\n` +
+                         `Data: ${document.getElementById('data-comanda').textContent}\n` +
+                         `Serviço: ${document.getElementById('servico-comanda').textContent}\n` +
+                         `Valor: ${document.getElementById('valor-comanda').textContent}\n` +
+                         `Porcentagem: ${document.getElementById('porcentagem-comanda').textContent}\n` +
+                         `Valor Profissional: ${document.getElementById('valor-profissional').textContent}\n\n` +
+                         `Endereço: Rua Astrolábio, 123 - Cidade Nova\n` +
+                         `Telefone: (92) 8831-1296`;
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('Informações da comanda copiadas para a área de transferência!\nCole em qualquer aplicativo para compartilhar.');
+            }).catch(() => {
+                prompt('Copie o texto abaixo para compartilhar:', texto);
+            });
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('comanda').style.display = 'none';
+            document.getElementById('action-buttons').style.display = 'none';
+            
+            // Teste de conexão com Firebase
+            console.log("Firebase inicializado:", app.name);
         });
-    }
-
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('comanda').style.display = 'none';
-        document.getElementById('action-buttons').style.display = 'none';
-        
-        // Teste de conexão com o Firebase
-        console.log("Firebase inicializado:", app.name);
-    });
-</script>
+    </script>
+</body>
+</html>
