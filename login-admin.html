@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Administrativo - Salão Michele</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <title>Painel Administrativo - Salão Michele</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -19,143 +16,206 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
         
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border-top: 5px solid var(--roxo-principal);
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .login-header img {
-            width: 100px;
-            margin-bottom: 1rem;
-        }
-        
-        .form-control {
-            border-radius: 8px;
-            padding: 12px 15px;
-        }
-        
-        .btn-login {
-            background: linear-gradient(135deg, var(--roxo-principal), var(--roxo-escuro));
-            border: none;
-            padding: 12px;
-            font-weight: 500;
-            width: 100%;
-            border-radius: 8px;
+        .sidebar {
+            background: linear-gradient(135deg, var(--roxo-escuro), var(--roxo-principal));
             color: white;
+            height: 100vh;
+            position: fixed;
+            width: 250px;
+            padding-top: 20px;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            text-align: center;
+        }
+        
+        .sidebar-header img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            margin-bottom: 10px;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            margin: 5px 0;
+            border-radius: 5px;
             transition: all 0.3s;
         }
         
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.4);
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background-color: var(--roxo-principal);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .welcome-card {
+            background: linear-gradient(135deg, var(--roxo-principal), var(--roxo-escuro));
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <img src="MICHA.jpeg" alt="Logo Salão" class="img-fluid rounded-circle">
-            <h3><i class="fas fa-lock"></i> Acesso Administrativo</h3>
-            <p class="text-muted">Entre com suas credenciais</p>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="MICHA.jpeg" alt="Admin">
+            <h5>Painel Administrativo</h5>
+            <small>Bem-vindo, <span id="adminName"></span></small>
         </div>
-        
-        <form id="loginForm">
-            <div class="mb-3">
-                <label for="username" class="form-label">Nome de Usuário</label>
-                <input type="text" class="form-control" id="username" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Senha</label>
-                <input type="password" class="form-control" id="password" required>
-            </div>
-            <button type="submit" class="btn btn-login mb-3">
-                <i class="fas fa-sign-in-alt"></i> Entrar
-            </button>
-            <div id="loginError" class="alert alert-danger d-none"></div>
-        </form>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="comanda.html">
+                    <i class="fas fa-receipt"></i> Comandas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-user-tie"></i> Profissionais
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-calendar-alt"></i> Agendamentos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-chart-line"></i> Relatórios
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link" href="#" id="logoutButton">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </li>
+        </ul>
     </div>
 
-    <!-- Firebase Configuration -->
-    <script>
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
-            authDomain: "aprendendo-a9a8b.firebaseapp.com",
-            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com",
-            projectId: "aprendendo-a9a8b",
-            storageBucket: "aprendendo-a9a8b.firebasestorage.app",
-            messagingSenderId: "1026606384841",
-            appId: "1:1026606384841:web:6a81256940c13ee149ef18",
-            measurementId: "G-46P5GW2BY3"
-        };
-
-        // Inicialize o Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        // Referência ao nó de administradores
-        const adminRef = database.ref('SALAO_MICHELE/admin');
-
-        // Função de login
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card welcome-card">
+                        <div class="card-body">
+                            <h4 class="card-title"><i class="fas fa-home"></i> Dashboard</h4>
+                            <p class="card-text">Bem-vindo ao painel administrativo do Salão Espaço Michele Ribeiro</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            // Resetar mensagem de erro
-            errorDiv.classList.add('d-none');
-            
-            // Verificar credenciais no Firebase
-            adminRef.once('value').then((snapshot) => {
-                const admins = snapshot.val();
-                let authenticated = false;
-                
-                // Verificar cada administrador
-                for (const key in admins) {
-                    if (admins[key].nome === username && admins[key].senha === password) {
-                        authenticated = true;
-                        break;
-                    }
-                }
-                
-                if (authenticated) {
-                    // Login bem-sucedido - redirecionar para área administrativa
-                    sessionStorage.setItem('adminAuthenticated', 'true');
-                    window.location.href = 'admin-dashboard.html'; // Página após login
-                } else {
-                    throw new Error('Usuário ou senha incorretos');
-                }
-            }).catch((error) => {
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('d-none');
-            });
-        });
-
-        // Verificar se já está logado
-        if (sessionStorage.getItem('adminAuthenticated') === 'true') {
-            window.location.href = 'admin-dashboard.html';
-        }
-    </script>
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-receipt"></i> Comandas Hoje
+                        </div>
+                        <div class="card-body">
+                            <h2 class="text-center">24</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-users"></i> Novos Clientes
+                        </div>
+                        <div class="card-body">
+                            <h2 class="text-center">5</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-money-bill-wave"></i> Faturamento
+                        </div>
+                        <div class="card-body">
+                            <h2 class="text-center">R$ 2.450</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-calendar-check"></i> Agendamentos
+                        </div>
+                        <div class="card-body">
+                            <h2 class="text-center">18</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Verificar autenticação
+        if (sessionStorage.getItem('adminAuthenticated') !== 'true') {
+            window.location.href = 'login-admin.html';
+        }
+        
+        // Mostrar nome do admin
+        document.getElementById('adminName').textContent = sessionStorage.getItem('adminUsername') || 'Administrador';
+        
+        // Logout
+        document.getElementById('logoutButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            sessionStorage.removeItem('adminAuthenticated');
+            sessionStorage.removeItem('adminUsername');
+            window.location.href = 'login-admin.html';
+        });
+    </script>
 </body>
 </html>
