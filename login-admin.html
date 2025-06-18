@@ -4,108 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Administrativo - Salão Michele</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
-            height: 100vh;
-            display: flex;
-            align-items: center;
+        :root {
+            --roxo-principal: #9c27b0;
+            --roxo-escuro: #7b1fa2;
         }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
         .login-container {
-            background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
             width: 100%;
             max-width: 400px;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-top: 5px solid var(--roxo-principal);
         }
+        
         .login-header {
-            background-color: #7b1fa2;
-            color: white;
-            padding: 20px;
             text-align: center;
+            margin-bottom: 2rem;
         }
-        .login-body {
-            padding: 30px;
+        
+        .login-header img {
+            width: 100px;
+            margin-bottom: 1rem;
         }
+        
         .form-control {
-            padding: 12px 15px;
             border-radius: 8px;
+            padding: 12px 15px;
         }
+        
         .btn-login {
-            background-color: #9c27b0;
-            color: white;
+            background: linear-gradient(135deg, var(--roxo-principal), var(--roxo-escuro));
             border: none;
             padding: 12px;
+            font-weight: 500;
+            width: 100%;
             border-radius: 8px;
-            font-weight: 600;
+            color: white;
             transition: all 0.3s;
         }
+        
         .btn-login:hover {
-            background-color: #7b1fa2;
-        }
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            display: block;
-            border-radius: 50%;
-            border: 3px solid white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.4);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="login-container">
-                    <div class="login-header">
-                        <img src="micha.jpeg" alt="Logo Salão" class="logo">
-                        <h4><i class="bi bi-shield-lock"></i> Acesso Administrativo</h4>
-                    </div>
-                    <div class="login-body">
-                        <form id="loginForm">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Usuário Admin</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                                    <input type="text" class="form-control" id="username" placeholder="Digite seu usuário" required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Senha</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
-                                    <input type="password" class="form-control" id="password" placeholder="Digite sua senha" required>
-                                </div>
-                            </div>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="rememberMe">
-                                <label class="form-check-label" for="rememberMe">Lembrar de mim</label>
-                            </div>
-                            <button type="submit" class="btn btn-login w-100">
-                                <i class="bi bi-box-arrow-in-right"></i> Entrar
-                            </button>
-                        </form>
-                        <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
-                    </div>
-                </div>
-            </div>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="MICHA.jpeg" alt="Logo Salão" class="img-fluid rounded-circle">
+            <h3><i class="fas fa-lock"></i> Acesso Administrativo</h3>
+            <p class="text-muted">Entre com suas credenciais</p>
         </div>
+        
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Nome de Usuário</label>
+                <input type="text" class="form-control" id="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Senha</label>
+                <input type="password" class="form-control" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-login mb-3">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            <div id="loginError" class="alert alert-danger d-none"></div>
+        </form>
     </div>
 
-    <!-- Firebase e Bootstrap JS -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- Firebase Configuration -->
     <script>
         // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
             authDomain: "aprendendo-a9a8b.firebaseapp.com",
+            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com",
             projectId: "aprendendo-a9a8b",
             storageBucket: "aprendendo-a9a8b.firebasestorage.app",
             messagingSenderId: "1026606384841",
@@ -113,64 +105,57 @@
             measurementId: "G-46P5GW2BY3"
         };
 
-        // Inicializar Firebase
+        // Inicialize o Firebase
         const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        const database = firebase.database();
 
-        // Credenciais do Admin (em produção, use Firebase Authentication ou um backend seguro)
-        const ADMIN_CREDENTIALS = {
-            username: "admin",
-            password: "admin123" // Em produção, use senha forte e hash
-        };
+        // Referência ao nó de administradores
+        const adminRef = database.ref('SALAO_MICHELE/admin');
 
-        // Evento de login
+        // Função de login
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
             
+            // Resetar mensagem de erro
             errorDiv.classList.add('d-none');
             
-            // Validação simples (em produção, use Firebase Authentication)
-            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                // Login bem-sucedido - redirecionar para o painel
-                sessionStorage.setItem('adminLoggedIn', 'true');
-                window.location.href = 'painel-admin.html';
-            } else {
-                errorDiv.textContent = "Usuário ou senha incorretos!";
-                errorDiv.classList.remove('d-none');
-            }
-            
-            // Versão com Firebase Authentication (recomendado para produção):
-            /*
-            auth.signInWithEmailAndPassword(username + '@salaomichele.com', password)
-                .then((userCredential) => {
-                    // Verificar se o usuário é admin
-                    if (userCredential.user.email === 'admin@salaomichele.com') {
-                        window.location.href = 'painel-admin.html';
-                    } else {
-                        auth.signOut();
-                        showError("Acesso restrito a administradores");
+            // Verificar credenciais no Firebase
+            adminRef.once('value').then((snapshot) => {
+                const admins = snapshot.val();
+                let authenticated = false;
+                
+                // Verificar cada administrador
+                for (const key in admins) {
+                    if (admins[key].nome === username && admins[key].senha === password) {
+                        authenticated = true;
+                        break;
                     }
-                })
-                .catch((error) => {
-                    showError(error.message);
-                });
-            */
+                }
+                
+                if (authenticated) {
+                    // Login bem-sucedido - redirecionar para área administrativa
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    window.location.href = 'admin-dashboard.html'; // Página após login
+                } else {
+                    throw new Error('Usuário ou senha incorretos');
+                }
+            }).catch((error) => {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('d-none');
+            });
         });
 
-        function showError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('d-none');
-        }
-
         // Verificar se já está logado
-        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-            window.location.href = 'painel-admin.html';
+        if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+            window.location.href = 'admin-dashboard.html';
         }
     </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
