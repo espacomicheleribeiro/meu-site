@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desempenho Profissional</title>
+    <!-- Importações necessárias -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: none;
+        }
+        .card-header {
+            background-color: #7b1fa2;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        .total-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #9c27b0;
+        }
+        .service-item {
+            border-left: 4px solid #9c27b0;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+        .service-item:hover {
+            background-color: #f5f5f5;
+            transform: translateX(5px);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+        .badge-custom {
+            background-color: #9c27b0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .select-profissional {
+            max-width: 300px;
+            margin: 0 auto 2rem auto;
+        }
+        .date-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .btn-voltar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            color: #7b1fa2;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-voltar:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .report-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+            }
+            .header, .card-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background: #7b1fa2 !important;
+                color: white !important;
+            }
+            .btn-voltar, .report-actions, .date-selector button {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            .service-item:hover {
+                transform: none;
+                background-color: transparent;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <!-- Botão de voltar para o painel do admin -->
+        <a href="painel-admin.html" class="btn-voltar">
+            <i class="fas fa-arrow-left"></i> Voltar ao Painel
+        </a>
+        
+        <div class="container">
+            <h1><i class="fas fa-chart-line"></i> Desempenho Profissional</h1>
+            <p class="lead">Acompanhe os serviços realizados e seu desempenho</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Seletor de Profissional -->
+        <div class="row mb-4">
+            <div class="col-md-6 mx-auto">
+                <select id="selectProfissional" class="form-select select-profissional">
+                    <option value="">Selecione o profissional</option>
+                    <option value="michele">Michele</option>
+                    <option value="izabel">Izabel</option>
+                    <option value="graziela">Graziela</option>
+                    <option value="rudy">Rudy</option>
+                    <option value="george">George</option>
+                    <option value="rosi">Rosi</option>
+                    <option value="patrícia">Patrícia</option>
+                    <option value="rosana">Rosana</option>
+                    <option value="felícia">Felícia</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Seletor de Data -->
+        <div class="date-selector">
+            <input type="date" id="dataInicio" class="form-control">
+            <input type="date" id="dataFim" class="form-control">
+            <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+        </div>
+
+        <!-- Resumo -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Total de Serviços</div>
+                    <div class="card-body text-center">
+                        <div class="total-value" id="totalServicos">0</div>
+                        <p class="text-muted">Neste período</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Valor Total</div>
+                    <div class="card-body text-center">
+                        <div class="total-value" id="valorTotal">R$ 0,00</div>
+                        <p class="text-muted">Valor bruto dos serviços</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Valor do Profissional</div>
+                    <div class="card-body text-center">
+                        <div class="total-value" id="valorProfissional">R$ 0,00</div>
+                        <p class="text-muted">Total a receber</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Desempenho Diário</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="chartDiario"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Serviços por Tipo</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="chartServicos"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Serviços -->
+        <div class="card mt-4">
+            <div class="card-header">Serviços Realizados</div>
+            <div class="card-body">
+                <div id="listaServicos" class="list-group">
+                    <!-- Serviços serão carregados aqui -->
+                    <div class="text-center text-muted py-4">Selecione um profissional para visualizar os serviços</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações de Relatório -->
+        <div class="report-actions">
+            <button id="btnGerarRelatorio" class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> Gerar Relatório
+            </button>
+            <button id="btnImprimir" class="btn btn-primary">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+            <button id="btnCompartilhar" class="btn btn-info">
+                <i class="fas fa-share-alt"></i> Compartilhar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para visualização do relatório -->
+    <div class="modal fade" id="relatorioModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Relatório de Desempenho</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="relatorioContent">
+                    <!-- Conteúdo do relatório será inserido aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button id="btnImprimirRelatorio" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Imprimir Relatório
+                    </button>
+                    <button id="btnDownloadRelatorio" class="btn btn-success">
+                        <i class="fas fa-download"></i> Baixar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+            authDomain: "aprendendo-a9a8b.firebaseapp.com",
+            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com",
+            projectId: "aprendendo-a9a8b",
+            storageBucket: "aprendendo-a9a8b.firebasestorage.app",
+            messagingSenderId: "1026606384841",
+            appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+            measurementId: "G-46P5GW2BY3"
+        };
+
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Variáveis globais
+        let chartDiario, chartServicos;
+        let servicosDoProfissional = [];
+        let profissionalSelecionado = '';
+        let dataInicioSelecionada = '';
+        let dataFimSelecionada = '';
+
+        // Formatadores
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+        }
+
+        function formatarData(dataStr) {
+            const [dia, mes, ano] = dataStr.split('/');
+            return new Date(`${mes}/${dia}/${ano}`);
+        }
+
+        function formatarDataParaExibicao(dataStr) {
+            const [dia, mes, ano] = dataStr.split('/');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        // Inicialização da página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar datas padrão (hoje)
+            const hoje = new Date();
+            const ontem = new Date();
+            ontem.setDate(hoje.getDate() - 7); // Últimos 7 dias
+            
+            document.getElementById('dataInicio').valueAsDate = ontem;
+            document.getElementById('dataFim').valueAsDate = hoje;
+            
+            // Event listeners
+            document.getElementById('selectProfissional').addEventListener('change', carregarDadosProfissional);
+            document.getElementById('btnFiltrar').addEventListener('click', carregarDadosProfissional);
+            document.getElementById('btnImprimir').addEventListener('click', imprimirRelatorio);
+            document.getElementById('btnCompartilhar').addEventListener('click', compartilharRelatorio);
+            document.getElementById('btnGerarRelatorio').addEventListener('click', gerarRelatorio);
+            document.getElementById('btnImprimirRelatorio').addEventListener('click', imprimirRelatorioModal);
+            document.getElementById('btnDownloadRelatorio').addEventListener('click', downloadRelatorio);
+            
+            // Inicializar gráficos vazios
+            inicializarGraficos();
+        });
+
+        // Carregar dados do profissional selecionado
+        function carregarDadosProfissional() {
+            profissionalSelecionado = document.getElementById('selectProfissional').value;
+            dataInicioSelecionada = document.getElementById('dataInicio').value;
+            dataFimSelecionada = document.getElementById('dataFim').value;
+            
+            if (!profissionalSelecionado) {
+                alert('Selecione um profissional');
+                return;
+            }
+            
+            // Converter datas para o formato dd/mm/aaaa
+            const dataInicioObj = new Date(dataInicioSelecionada);
+            const dataFimObj = new Date(dataFimSelecionada);
+            
+            // Referência ao Firebase
+            const ref = database.ref('SALAO_MICHELE/comandas');
+            
+            ref.once('value').then((snapshot) => {
+                servicosDoProfissional = [];
+                let totalValor = 0;
+                let totalProfissional = 0;
+                
+                snapshot.forEach((childSnapshot) => {
+                    const servico = childSnapshot.val();
+                    const dataServico = formatarData(servico.data);
+                    
+                    // Filtrar por profissional e data
+                    if (servico.profissional === profissionalSelecionado && 
+                        dataServico >= dataInicioObj && 
+                        dataServico <= dataFimObj) {
+                        
+                        servicosDoProfissional.push(servico);
+                        totalValor += servico.valor;
+                        totalProfissional += servico.valorProfissional;
+                    }
+                });
+                
+                // Atualizar totais
+                document.getElementById('totalServicos').textContent = servicosDoProfissional.length;
+                document.getElementById('valorTotal').textContent = formatarMoeda(totalValor);
+                document.getElementById('valorProfissional').textContent = formatarMoeda(totalProfissional);
+                
+                // Atualizar lista de serviços
+                atualizarListaServicos();
+                
+                // Atualizar gráficos
+                atualizarGraficos();
+            }).catch((error) => {
+                console.error('Erro ao carregar dados:', error);
+                alert('Erro ao carregar dados do profissional');
+            });
+        }
+
+        // Atualizar lista de serviços
+        function atualizarListaServicos() {
+            const lista = document.getElementById('listaServicos');
+            lista.innerHTML = '';
+            
+            if (servicosDoProfissional.length === 0) {
+                lista.innerHTML = '<div class="text-center text-muted py-4">Nenhum serviço encontrado neste período</div>';
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            servicosDoProfissional.sort((a, b) => {
+                return formatarData(b.data) - formatarData(a.data);
+            });
+            
+            servicosDoProfissional.forEach(servico => {
+                const item = document.createElement('div');
+                item.className = 'service-item';
+                
+                item.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <h5>${servico.servico}</h5>
+                        <span class="badge badge-custom">${servico.data}</span>
+                    </div>
+                    <p class="mb-1">Cliente: ${servico.cliente}</p>
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">${servico.detalhe}</small>
+                        <div>
+                            <span class="badge bg-success">${formatarMoeda(servico.valor)}</span>
+                            <span class="badge bg-primary">${formatarMoeda(servico.valorProfissional)}</span>
+                        </div>
+                    </div>
+                `;
+                
+                lista.appendChild(item);
+            });
+        }
+
+        // Inicializar gráficos vazios
+        function inicializarGraficos() {
+            const ctxDiario = document.getElementById('chartDiario').getContext('2d');
+            const ctxServicos = document.getElementById('chartServicos').getContext('2d');
+            
+            chartDiario = new Chart(ctxDiario, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Valor do Profissional (R$)',
+                        data: [],
+                        backgroundColor: 'rgba(156, 39, 176, 0.2)',
+                        borderColor: 'rgba(156, 39, 176, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            chartServicos = new Chart(ctxServicos, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(156, 39, 176, 0.7)',
+                            'rgba(33, 150, 243, 0.7)',
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(233, 30, 99, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Atualizar gráficos com dados
+        function atualizarGraficos() {
+            if (servicosDoProfissional.length === 0) {
+                chartDiario.data.labels = [];
+                chartDiario.data.datasets[0].data = [];
+                chartDiario.update();
+                
+                chartServicos.data.labels = [];
+                chartServicos.data.datasets[0].data = [];
+                chartServicos.update();
+                return;
+            }
+            
+            // Gráfico diário
+            const dadosPorDia = {};
+            servicosDoProfissional.forEach(servico => {
+                if (!dadosPorDia[servico.data]) {
+                    dadosPorDia[servico.data] = 0;
+                }
+                dadosPorDia[servico.data] += servico.valorProfissional;
+            });
+            
+            const diasOrdenados = Object.keys(dadosPorDia).sort((a, b) => {
+                return formatarData(a) - formatarData(b);
+            });
+            
+            chartDiario.data.labels = diasOrdenados;
+            chartDiario.data.datasets[0].data = diasOrdenados.map(dia => dadosPorDia[dia]);
+            chartDiario.update();
+            
+            // Gráfico de serviços
+            const dadosPorServico = {};
+            servicosDoProfissional.forEach(servico => {
+                if (!dadosPorServico[servico.servico]) {
+                    dadosPorServico[servico.servico] = 0;
+                }
+                dadosPorServico[servico.servico]++;
+            });
+            
+            chartServicos.data.labels = Object.keys(dadosPorServico);
+            chartServicos.data.datasets[0].data = Object.values(dadosPorServico);
+            chartServicos.update();
+        }
+
+        // Gerar relatório em formato HTML
+        function gerarRelatorio() {
+            if (!profissionalSelecionado || servicosDoProfissional.length === 0) {
+                alert('Selecione um profissional e filtre os dados antes de gerar o relatório');
+                return;
+            }
+
+            const relatorioModal = new bootstrap.Modal(document.getElementById('relatorioModal'));
+            const relatorioContent = document.getElementById('relatorioContent');
+            
+            // Calcular totais
+            const totalServicos = servicosDoProfissional.length;
+            const totalValor = servicosDoProfissional.reduce((sum, servico) => sum + servico.valor, 0);
+            const totalProfissional = servicosDoProfissional.reduce((sum, servico) => sum + servico.valorProfissional, 0);
+            
+            // Formatar datas
+            const dataInicioFormatada = new Date(dataInicioSelecionada).toLocaleDateString('pt-BR');
+            const dataFimFormatada = new Date(dataFimSelecionada).toLocaleDateString('pt-BR');
+            
+            // Criar HTML do relatório
+            let htmlRelatorio = `
+                <div class="relatorio-container">
+                    <div class="text-center mb-4">
+                        <h2>Relatório de Desempenho Profissional</h2>
+                        <h3>${profissionalSelecionado}</h3>
+                        <p>Período: ${dataInicioFormatada} a ${dataFimFormatada}</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">Total de Serviços</div>
+                                <div class="card-body text-center">
+                                    <div class="total-value">${totalServicos}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">Valor Total</div>
+                                <div class="card-body text-center">
+                                    <div class="total-value">${formatarMoeda(totalValor)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">Valor do Profissional</div>
+                                <div class="card-body text-center">
+                                    <div class="total-value">${formatarMoeda(totalProfissional)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4 class="text-center">Desempenho Diário</h4>
+                            <div style="height: 300px">
+                                <canvas id="chartDiarioRelatorio"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="text-center">Serviços por Tipo</h4>
+                            <div style="height: 300px">
+                                <canvas id="chartServicosRelatorio"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="mb-3">Serviços Realizados</h4>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Serviço</th>
+                                    <th>Cliente</th>
+                                    <th>Detalhes</th>
+                                    <th>Valor (R$)</th>
+                                    <th>Profissional (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            // Adicionar serviços à tabela
+            servicosDoProfissional.forEach(servico => {
+                htmlRelatorio += `
+                    <tr>
+                        <td>${servico.data}</td>
+                        <td>${servico.servico}</td>
+                        <td>${servico.cliente}</td>
+                        <td>${servico.detalhe}</td>
+                        <td>${formatarMoeda(servico.valor)}</td>
+                        <td>${formatarMoeda(servico.valorProfissional)}</td>
+                    </tr>
+                `;
+            });
+            
+            htmlRelatorio += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 text-end">
+                        <p><strong>Total de Serviços:</strong> ${totalServicos}</p>
+                        <p><strong>Valor Total Bruto:</strong> ${formatarMoeda(totalValor)}</p>
+                        <p><strong>Total a Receber:</strong> ${formatarMoeda(totalProfissional)}</p>
+                    </div>
+                    
+                    <div class="mt-5 text-muted text-center">
+                        <p>Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Inserir HTML no modal
+            relatorioContent.innerHTML = htmlRelatorio;
+            
+            // Mostrar o modal
+            relatorioModal.show();
+            
+            // Inicializar gráficos no modal
+            setTimeout(() => {
+                const ctxDiarioRelatorio = document.getElementById('chartDiarioRelatorio').getContext('2d');
+                const ctxServicosRelatorio = document.getElementById('chartServicosRelatorio').getContext('2d');
+                
+                // Gráfico diário
+                const dadosPorDia = {};
+                servicosDoProfissional.forEach(servico => {
+                    if (!dadosPorDia[servico.data]) {
+                        dadosPorDia[servico.data] = 0;
+                    }
+                    dadosPorDia[servico.data] += servico.valorProfissional;
+                });
+                
+                const diasOrdenados = Object.keys(dadosPorDia).sort((a, b) => {
+                    return formatarData(a) - formatarData(b);
+                });
+                
+                new Chart(ctxDiarioRelatorio, {
+                    type: 'line',
+                    data: {
+                        labels: diasOrdenados,
+                        datasets: [{
+                            label: 'Valor do Profissional (R$)',
+                            data: diasOrdenados.map(dia => dadosPorDia[dia]),
+                            backgroundColor: 'rgba(156, 39, 176, 0.2)',
+                            borderColor: 'rgba(156, 39, 176, 1)',
+                            borderWidth: 2,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+                
+                // Gráfico de serviços
+                const dadosPorServico = {};
+                servicosDoProfissional.forEach(servico => {
+                    if (!dadosPorServico[servico.servico]) {
+                        dadosPorServico[servico.servico] = 0;
+                    }
+                    dadosPorServico[servico.servico]++;
+                });
+                
+                new Chart(ctxServicosRelatorio, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(dadosPorServico),
+                        datasets: [{
+                            data: Object.values(dadosPorServico),
+                            backgroundColor: [
+                                'rgba(156, 39, 176, 0.7)',
+                                'rgba(33, 150, 243, 0.7)',
+                                'rgba(76, 175, 80, 0.7)',
+                                'rgba(255, 152, 0, 0.7)',
+                                'rgba(233, 30, 99, 0.7)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }, 500);
+        }
+
+        // Imprimir relatório
+        function imprimirRelatorio() {
+            if (!profissionalSelecionado || servicosDoProfissional.length === 0) {
+                alert('Selecione um profissional e filtre os dados antes de imprimir');
+                return;
+            }
+            
+            window.print();
+        }
+
+        // Imprimir relatório do modal
+        function imprimirRelatorioModal() {
+            const relatorioContent = document.getElementById('relatorioContent').innerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            document.body.innerHTML = relatorioContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+            
+            // Recarregar gráficos após impressão
+            carregarDadosProfissional();
+        }
+
+        // Compartilhar relatório
+        function compartilharRelatorio() {
+            if (!profissionalSelecionado || servicosDoProfissional.length === 0) {
+                alert('Selecione um profissional e filtre os dados antes de compartilhar');
+                return;
+            }
+            
+            // Calcular totais para o texto de compartilhamento
+            const totalServicos = servicosDoProfissional.length;
+            const totalProfissional = servicosDoProfissional.reduce((sum, servico) => sum + servico.valorProfissional, 0);
+            
+            // Formatar datas
+            const dataInicioFormatada = new Date(dataInicioSelecionada).toLocaleDateString('pt-BR');
+            const dataFimFormatada = new Date(dataFimSelecionada).toLocaleDateString('pt-BR');
+            
+            const textoCompartilhamento = `Relatório de Desempenho - ${profissionalSelecionado}\n` +
+                                         `Período: ${dataInicioFormatada} a ${dataFimFormatada}\n` +
+                                         `Total de Serviços: ${totalServicos}\n` +
+                                         `Total a Receber: ${formatarMoeda(totalProfissional)}\n` +
+                                         `Relatório gerado em ${new Date().toLocaleDateString('pt-BR')}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `Relatório ${profissionalSelecionado}`,
+                    text: textoCompartilhamento,
+                    // Se quiser compartilhar como PDF no futuro, pode adicionar um arquivo aqui
+                })
+                .catch(error => {
+                    console.error('Erro ao compartilhar:', error);
+                    copiarParaAreaTransferencia(textoCompartilhamento);
+                });
+            } else {
+                copiarParaAreaTransferencia(textoCompartilhamento);
+            }
+        }
+
+        // Copiar texto para área de transferência
+        function copiarParaAreaTransferencia(texto) {
+            navigator.clipboard.writeText(texto)
+                .then(() => {
+                    alert('Relatório copiado para a área de transferência! Cole no aplicativo desejado.');
+                })
+                .catch(err => {
+                    console.error('Erro ao copiar texto: ', err);
+                    alert('Não foi possível copiar o relatório. Tente manualmente:\n\n' + texto);
+                });
+        }
+
+        // Download do relatório como PDF (simulado)
+        function downloadRelatorio() {
+            alert('Funcionalidade de download de PDF seria implementada com uma biblioteca como jsPDF ou html2pdf.js');
+            // Na implementação real, você usaria:
+            // 1. html2pdf.js para converter o HTML em PDF
+            // 2. Ou jsPDF para criar um PDF programaticamente
+            // Exemplo básico:
+            // const element = document.getElementById('relatorioContent');
+            // html2pdf().from(element).save(`relatorio_${profissionalSelecionado}.pdf`);
+        }
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Bibliotecas para PDF (comentadas, descomente para usar) -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script> -->
+</body>
+</html>
