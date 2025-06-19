@@ -78,11 +78,6 @@
             top: 20px;
             right: 20px;
         }
-        .home-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
         .hidden {
             display: none;
         }
@@ -125,10 +120,7 @@
     <div id="professionalArea" class="hidden">
         <div class="header text-center">
             <div class="container">
-                <button id="btnHome" class="btn btn-light home-btn">
-                    <i class="fas fa-home"></i> Página Principal
-                </button>
-                <button id="btnLogout" class="btn btn-light logout-btn">
+                <button href="https://espacomicheleribeiro.github.io/meu-site/index.html" id="btnLogout" class="btn btn-light logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Sair
                 </button>
                 <h1><i class="fas fa-user-tie"></i> Meu Desempenho</h1>
@@ -259,7 +251,6 @@
             // Event listeners
             document.getElementById('btnLogin').addEventListener('click', fazerLogin);
             document.getElementById('btnLogout').addEventListener('click', fazerLogout);
-            document.getElementById('btnHome').addEventListener('click', voltarParaHome);
             document.getElementById('btnFiltrar').addEventListener('click', carregarComandas);
             document.getElementById('searchComanda').addEventListener('input', filtrarComandas);
             
@@ -271,11 +262,6 @@
                 carregarComandas();
             }
         });
-
-        // Função para voltar para a página principal
-        function voltarParaHome() {
-            window.location.href = "index.html"; // Altere para o nome da sua página principal
-        }
 
         // Função de login
         async function fazerLogin() {
