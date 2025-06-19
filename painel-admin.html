@@ -120,8 +120,12 @@
                     <a href="profissional.html" class="nav-link" target="_blank" >
                         <i class="bi bi-speedometer2"></i>Desempenho dos Profissionais              
                     </a>
-                    
                 </li>
+                <li class="nav-item">
+                    <a href="despesas.html" class="nav-link" target="_blank" >
+                        <i class="bi bi-speedometer2"></i>Despesas              
+                    </a>
+                </li>                                
                 <li class="nav-item mt-4">
                     <a class="nav-link text-danger" href="#" id="logoutBtn">
                         <i class="bi bi-box-arrow-right"></i> Sair
@@ -869,7 +873,7 @@
             }
         }
 
-  function loadMonthlyRevenue() {
+     function loadMonthlyRevenue() {
     const now = new Date();
     const currentMonth = now.getMonth() + 1; // Janeiro é 0
     const currentYear = now.getFullYear();
