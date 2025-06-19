@@ -103,7 +103,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-section="profissionais">
-                        <i class="bi bi-people-fill"></i> Criar/ Deletar Profissionais
+                        <i class="bi bi-people-fill"></i> Profissionais
                     </a>
                 </li>
                 <li class="nav-item">
@@ -117,7 +117,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="profissional.html" class="nav-link" target="_blank">
+                    <a href="profissional.html" class="nav-link" target="_blank" >
                         <i class="bi bi-speedometer2"></i>Desempenho dos Profissionais              
                     </a>
                     
@@ -869,10 +869,41 @@
             }
         }
 
-        function loadMonthlyRevenue() {
-            // Implementar cálculo do faturamento mensal
-            document.getElementById('faturamentoMensal').textContent = 'R$ 15.750,00';
-        }
+  function loadMonthlyRevenue() {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // Janeiro é 0
+    const currentYear = now.getFullYear();
+    
+    // Formatar o mês para garantir 2 dígitos (01, 02, ..., 12)
+    const monthFormatted = currentMonth.toString().padStart(2, '0');
+    
+    // Criar padrão de data para filtrar (MM/AAAA)
+    const monthYearPattern = `${monthFormatted}/${currentYear}`;
+    
+    database.ref('SALAO_MICHELE/comandas').once('value').then(snapshot => {
+        let totalRevenue = 0;
+        
+        snapshot.forEach(childSnapshot => {
+            const comanda = childSnapshot.val();
+            
+            // Verificar se a comanda pertence ao mês atual
+            if (comanda.data && comanda.data.endsWith(monthYearPattern)) {
+                totalRevenue += comanda.valor || 0;
+            }
+        });
+        
+        // Formatando o valor para exibição (R$ 12.345,67)
+        const formattedRevenue = totalRevenue.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+        
+        document.getElementById('faturamentoMensal').textContent = formattedRevenue;
+    }).catch(error => {
+        console.error('Erro ao calcular faturamento mensal:', error);
+        document.getElementById('faturamentoMensal').textContent = 'R$ 0,00';
+    });
+}
 
         function loadRecentActivities() {
             const tbody = document.getElementById('recentActivities').querySelector('tbody');
