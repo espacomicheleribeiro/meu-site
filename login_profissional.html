@@ -201,7 +201,7 @@
 
             <!-- Resumo -->
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">Total de Serviços</div>
                         <div class="card-body text-center">
@@ -210,16 +210,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">Valor Total</div>
-                        <div class="card-body text-center">
-                            <div class="total-value" id="valorTotal">R$ 0,00</div>
-                            <p class="text-muted">Valor bruto dos serviços</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">Valor a Receber</div>
                         <div class="card-body text-center">
@@ -373,11 +364,12 @@
         }
 
         // Função de logout
-        function fazerLogout() {
-            profissionalLogado = null;
-            sessionStorage.removeItem('profissionalLogado');
-            mostrarTelaLogin();
-        }
+     function fazerLogout() {
+        profissionalLogado = null;
+        sessionStorage.removeItem('profissionalLogado');
+        // Redirecionar para index.html
+        window.location.href = 'index.html';
+    }
 
         // Mostrar tela de login
         function mostrarTelaLogin() {
@@ -417,7 +409,6 @@
             
             ref.once('value').then((snapshot) => {
                 comandasDoProfissional = [];
-                let totalValor = 0;
                 let totalProfissional = 0;
                 
                 snapshot.forEach((childSnapshot) => {
@@ -433,14 +424,12 @@
                             id: childSnapshot.key,
                             ...comanda
                         });
-                        totalValor += comanda.valor;
                         totalProfissional += comanda.valorProfissional;
                     }
                 });
                 
                 // Atualizar totais
                 document.getElementById('totalServicos').textContent = comandasDoProfissional.length;
-                document.getElementById('valorTotal').textContent = formatarMoeda(totalValor);
                 document.getElementById('valorProfissional').textContent = formatarMoeda(totalProfissional);
                 
                 // Atualizar lista de comandas
@@ -498,7 +487,6 @@
                     <div class="d-flex justify-content-between">
                         <small class="text-muted">${comanda.detalhe}</small>
                         <div>
-                            <span class="badge bg-success">${formatarMoeda(comanda.valor)}</span>
                             <span class="badge bg-primary">${formatarMoeda(comanda.valorProfissional)}</span>
                         </div>
                     </div>
