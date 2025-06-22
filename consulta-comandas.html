@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comandas - Salão Michele</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --roxo-principal: #8A2BE2;
+            --roxo-escuro: #5F1E9E;
+            --rosa: #FF69B4;
+            --cinza-claro: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--cinza-claro);
+        }
+        
+        .header h1 {
+            color: var(--roxo-principal);
+            font-weight: 700;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .btn-roxo {
+            background-color: var(--roxo-principal);
+            color: white;
+            border: none;
+        }
+        
+        .btn-roxo:hover {
+            background-color: var(--roxo-escuro);
+            color: white;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: var(--roxo-principal);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:nth-child(even) {
+            background-color: var(--cinza-claro);
+        }
+        
+        tr:hover {
+            background-color: rgba(138, 43, 226, 0.05);
+        }
+        
+        .badge-servico {
+            background-color: var(--rosa);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .total-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .acoes-cell {
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .filtros-container {
+                flex-direction: column;
+            }
+            
+            .filtro-group {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .acoes-cell {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://via.placeholder.com/150" alt="Logo Salão Michele" class="logo">
+            <h1>LISTA DE COMANDAS</h1>
+            <p class="text-muted">Todas as comandas cadastradas no sistema</p>
+        </div>
+        
+        <div class="filtros-container d-flex flex-wrap justify-content-between mb-4">
+            <div class="filtro-group" style="flex: 2; min-width: 250px; margin-right: 15px;">
+                <label for="filtro-nome" class="form-label">Nome do Cliente</label>
+                <input type="text" class="form-control" id="filtro-nome" placeholder="Filtrar por nome">
+            </div>
+            
+            <div class="filtro-group" style="flex: 1; min-width: 200px; margin-right: 15px;">
+                <label for="filtro-profissional" class="form-label">Profissional</label>
+                <select class="form-select" id="filtro-profissional">
+                    <option value="">Todos</option>
+                    <option value="Michele">Michele</option>
+                    <option value="Izabel">Izabel</option>
+                    <option value="Graziela">Graziela</option>
+                    <option value="Rudy">Rudy</option>
+                    <option value="George">George</option>
+                    <option value="Rosi">Rosi</option>
+                    <option value="Patrícia">Patrícia</option>
+                    <option value="Rosana">Rosana</option>
+                    <option value="Felícia">Felícia</option>
+                </select>
+            </div>
+            
+            <div class="filtro-group" style="flex: 1; min-width: 180px; margin-right: 15px;">
+                <label for="filtro-data" class="form-label">Data</label>
+                <input type="date" class="form-control" id="filtro-data">
+            </div>
+            
+            <div class="filtro-group d-flex align-items-end" style="flex: 1; min-width: 120px;">
+                <button class="btn btn-roxo w-100" id="btn-filtrar">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table" id="tabela-comandas">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Serviços</th>
+                        <th>Valor</th>
+                        <th>Profissional</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                    <!-- Dados serão preenchidos via JavaScript -->
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3" class="text-end fw-bold">Total:</td>
+                        <td id="total-valor" class="fw-bold">R$ 0,00</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-MiWuaNFmuXJqAwd8BSO5Grebl3qhxP8",
+            authDomain: "aprendendo-a9a8b.firebaseapp.com",
+            databaseURL: "https://aprendendo-a9a8b-default-rtdb.firebaseio.com",
+            projectId: "aprendendo-a9a8b",
+            storageBucket: "aprendendo-a9a8b.appspot.com",
+            messagingSenderId: "1026606384841",
+            appId: "1:1026606384841:web:6a81256940c13ee149ef18",
+            measurementId: "G-46P5GW2BY3"
+        };
+
+        // Inicialize o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variáveis globais
+        let comandas = [];
+        
+        // Formatar moeda
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor).toFixed(2).replace('.', ',');
+        }
+        
+        // Função para converter qualquer formato de data para objeto Date
+        function parseDate(data) {
+            if (!data) return null;
+            
+            // Se já for objeto Date válido
+            if (data instanceof Date && !isNaN(data.getTime())) return data;
+            
+            // Se for timestamp numérico
+            if (typeof data === 'number') {
+                const date = new Date(data);
+                if (!isNaN(date.getTime())) return date;
+            }
+            
+            // Se estiver no formato dd/mm/aaaa
+            if (typeof data === 'string' && data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                const [dia, mes, ano] = data.split('/');
+                const date = new Date(ano, mes-1, dia);
+                if (!isNaN(date.getTime())) return date;
+            }
+            
+            // Se estiver no formato aaaa-mm-dd (input type date)
+            if (typeof data === 'string' && data.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const date = new Date(data);
+                if (!isNaN(date.getTime())) return date;
+            }
+            
+            // Tentar parsear como ISO string
+            const date = new Date(data);
+            if (!isNaN(date.getTime())) return date;
+            
+            console.warn('Formato de data não reconhecido:', data);
+            return null;
+        }
+        
+        // Função para formatar data como string dd/mm/aaaa
+        function formatarDataBR(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '--';
+            
+            const dia = String(date.getDate()).padStart(2, '0');
+            const mes = String(date.getMonth()+1).padStart(2, '0');
+            const ano = date.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+        
+        // Carregar comandas do Firebase com tratamento robusto
+        async function carregarComandas() {
+            try {
+                console.log('Carregando comandas do Firebase...');
+                const snapshot = await database.ref('SALAO_MICHELE/comandas').once('value');
+                const dados = snapshot.val();
+                
+                comandas = [];
+                if (dados) {
+                    Object.keys(dados).forEach(key => {
+                        const comanda = dados[key];
+                        
+                        // Converter e validar a data
+                        let dataObj = null;
+                        if (comanda.data) {
+                            dataObj = parseDate(comanda.data);
+                            if (!dataObj) {
+                                console.warn(`Data inválida na comanda ${key}:`, comanda.data);
+                            }
+                        }
+                        
+                        // Se não tiver data válida, tentar usar o timestamp
+                        if (!dataObj && comanda.timestamp) {
+                            dataObj = parseDate(comanda.timestamp);
+                            if (!dataObj) {
+                                console.warn(`Timestamp inválido na comanda ${key}:`, comanda.timestamp);
+                            }
+                        }
+                        
+                        // Adicionar comanda com data padronizada
+                        comandas.push({
+                            id: key,
+                            ...comanda,
+                            dataObj: dataObj,
+                            dataFormatada: dataObj ? formatarDataBR(dataObj) : '--'
+                        });
+                    });
+                    
+                    console.log(`Carregadas ${comandas.length} comandas`);
+                    
+                    // Ordenar por data (mais recente primeiro)
+                    comandas.sort((a, b) => {
+                        const dataA = a.dataObj || new Date(0);
+                        const dataB = b.dataObj || new Date(0);
+                        return dataB - dataA;
+                    });
+                } else {
+                    console.log('Nenhuma comanda encontrada no banco de dados');
+                }
+                
+                atualizarTabela(comandas);
+            } catch (error) {
+                console.error('Erro ao carregar comandas:', error);
+                alert('Erro ao carregar comandas. Verifique o console para detalhes.');
+            }
+        }
+        
+        // Atualizar tabela com as comandas
+        function atualizarTabela(comandasFiltradas) {
+            console.log('Atualizando tabela com', comandasFiltradas.length, 'comandas');
+            
+            const tabelaCorpo = document.getElementById('tabela-corpo');
+            tabelaCorpo.innerHTML = '';
+            
+            if (comandasFiltradas.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td colspan="6" class="text-center py-4 text-muted">
+                        Nenhuma comanda encontrada com os filtros atuais
+                    </td>
+                `;
+                tabelaCorpo.appendChild(tr);
+                document.getElementById('total-valor').textContent = 'R$ 0,00';
+                return;
+            }
+            
+            let total = 0;
+            
+            comandasFiltradas.forEach(comanda => {
+                total += parseFloat(comanda.valor) || 0;
+                
+                const tr = document.createElement('tr');
+                
+                // Data
+                const tdData = document.createElement('td');
+                tdData.textContent = comanda.dataFormatada;
+                tr.appendChild(tdData);
+                
+                // Nome do cliente
+                const tdCliente = document.createElement('td');
+                tdCliente.textContent = comanda.cliente || comanda.nome || '--';
+                tr.appendChild(tdCliente);
+                
+                // Serviços
+                const tdServicos = document.createElement('td');
+                if (comanda.servicos) {
+                    const servicos = typeof comanda.servicos === 'string' ? 
+                        comanda.servicos.split(',') : 
+                        (Array.isArray(comanda.servicos) ? comanda.servicos : []);
+                    
+                    servicos.forEach(servico => {
+                        if (servico.trim()) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge-servico';
+                            badge.textContent = servico.trim();
+                            tdServicos.appendChild(badge);
+                        }
+                    });
+                }
+                tr.appendChild(tdServicos);
+                
+                // Valor
+                const tdValor = document.createElement('td');
+                tdValor.textContent = formatarMoeda(comanda.valor || 0);
+                tr.appendChild(tdValor);
+                
+                // Profissional
+                const tdProfissional = document.createElement('td');
+                tdProfissional.textContent = comanda.profissional || '--';
+                tr.appendChild(tdProfissional);
+                
+                // Ações
+                const tdAcoes = document.createElement('td');
+                tdAcoes.className = 'acoes-cell';
+                
+                const btnVisualizar = document.createElement('button');
+                btnVisualizar.className = 'btn btn-sm btn-primary';
+                btnVisualizar.innerHTML = '<i class="fas fa-eye"></i>';
+                btnVisualizar.onclick = () => visualizarComanda(comanda);
+                tdAcoes.appendChild(btnVisualizar);
+                
+                tr.appendChild(tdAcoes);
+                
+                tabelaCorpo.appendChild(tr);
+            });
+            
+            // Atualizar total
+            document.getElementById('total-valor').textContent = formatarMoeda(total);
+        }
+        
+        // Visualizar detalhes da comanda
+        function visualizarComanda(comanda) {
+            let mensagem = `
+                <strong>Data:</strong> ${comanda.dataFormatada}<br>
+                <strong>Cliente:</strong> ${comanda.cliente || comanda.nome || '--'}<br>
+                <strong>Telefone:</strong> ${comanda.telefone || '--'}<br>
+                <strong>Profissional:</strong> ${comanda.profissional || '--'}<br>
+                <strong>Valor Total:</strong> ${formatarMoeda(comanda.valor || 0)}<br>
+            `;
+            
+            if (comanda.porcentagem) {
+                const valorProfissional = (comanda.valor * comanda.porcentagem / 100).toFixed(2);
+                mensagem += `
+                    <strong>Porcentagem Profissional:</strong> ${comanda.porcentagem}%<br>
+                    <strong>Valor Profissional:</strong> ${formatarMoeda(valorProfissional)}<br>
+                `;
+            }
+            
+            mensagem += `<strong>Serviços:</strong><br>`;
+            
+            if (comanda.servicos) {
+                const servicos = typeof comanda.servicos === 'string' ? 
+                    comanda.servicos.split(',') : 
+                    (Array.isArray(comanda.servicos) ? comanda.servicos : []);
+                
+                servicos.forEach(servico => {
+                    if (servico.trim()) {
+                        mensagem += `- ${servico.trim()}<br>`;
+                    }
+                });
+            }
+            
+            if (comanda.observacoes) {
+                mensagem += `<br><strong>Observações:</strong><br>${comanda.observacoes}`;
+            }
+            
+            alert(mensagem);
+        }
+        
+        // Filtrar comandas com comparação robusta de datas
+        function filtrarComandas() {
+            const filtroNome = document.getElementById('filtro-nome').value.toLowerCase();
+            const filtroProfissional = document.getElementById('filtro-profissional').value;
+            const filtroDataInput = document.getElementById('filtro-data').value;
+            
+            let comandasFiltradas = [...comandas];
+            
+            console.log('Aplicando filtros...');
+            console.log('Filtro data:', filtroDataInput);
+            
+            // Filtrar por nome
+            if (filtroNome) {
+                comandasFiltradas = comandasFiltradas.filter(comanda => {
+                    const nomeCliente = (comanda.cliente || comanda.nome || '').toLowerCase();
+                    return nomeCliente.includes(filtroNome);
+                });
+            }
+            
+            // Filtrar por profissional
+            if (filtroProfissional) {
+                comandasFiltradas = comandasFiltradas.filter(comanda => 
+                    comanda.profissional === filtroProfissional
+                );
+            }
+            
+            // Filtrar por data
+            if (filtroDataInput) {
+                const dataFiltro = new Date(filtroDataInput);
+                if (isNaN(dataFiltro.getTime())) {
+                    console.warn('Data do filtro inválida:', filtroDataInput);
+                } else {
+                    console.log('Filtrando pela data:', formatarDataBR(dataFiltro));
+                    
+                    comandasFiltradas = comandasFiltradas.filter(comanda => {
+                        if (!comanda.dataObj) return false;
+                        
+                        // Comparação direta de dia, mês e ano
+                        return (
+                            comanda.dataObj.   getDate()  === dataFiltro.getDate() &&
+                            comanda.dataObj.   getMonth() === dataFiltro.getMonth() &&
+                            comanda.dataObj.getFullYear() === dataFiltro.getFullYear()
+                        );
+                    });
+                }
+            }
+            
+            console.log('Comandas após filtros:', comandasFiltradas);
+            atualizarTabela(comandasFiltradas);
+        }
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar comandas
+            carregarComandas();
+            
+            // Event listeners
+            document.getElementById('btn-filtrar').addEventListener('click', filtrarComandas);
+            
+            // Permitir filtrar pressionando Enter no campo de nome
+            document.getElementById('filtro-nome').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    filtrarComandas();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
