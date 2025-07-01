@@ -73,14 +73,6 @@
         .search-box {
             max-width: 300px;
         }
-        #relatorioMensalTable tbody tr:last-child {
-            font-weight: bold;
-            background-color: #f8f9fa;
-        }
-        #relatorioMensalTable td:nth-child(3),
-        #relatorioMensalTable td:nth-child(4) {
-            text-align: right;
-        }
         @media (max-width: 768px) {
             .sidebar {
                 width: 0;
@@ -782,126 +774,159 @@
         }
 
         function loadRelatorios() {
-            // Carregar dados para os gráficos
-            updateCharts();
+            // Implementar carregamento de dados para relatórios
         }
 
         function generateMonthlyReport() {
-            const gerarBtn = document.getElementById('gerarRelatorioBtn');
-            const originalText = gerarBtn.innerHTML;
-            gerarBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Gerando...';
-            gerarBtn.disabled = true;
-            
-            const mes = document.getElementById('relatorioMes').value;
-            const ano = document.getElementById('relatorioAno').value;
-            
-            // Validar se o mês/ano não é futuro
-            const currentDate = new Date();
-            const selectedDate = new Date(ano, mes - 1);
-            
-            if (selectedDate > currentDate) {
-                alert('Não é possível gerar relatório para períodos futuros');
-                gerarBtn.innerHTML = originalText;
-                gerarBtn.disabled = false;
-                return;
-            }
-            
-            // Formatar o mês com 2 dígitos
-            const mesFormatado = mes.toString().padStart(2, '0');
-            const periodo = `${mesFormatado}/${ano}`;
-            
-            database.ref('SALAO_MICHELE/comandas').once('value').then(snapshot => {
-                const relatorio = {};
-                let faturamentoTotal = 0;
-                
-                // Processar todas as comandas
-                snapshot.forEach(childSnapshot => {
-                    const comanda = childSnapshot.val();
-                    
-                    // Verificar se a comanda pertence ao mês/ano selecionado
-                    if (comanda.data && comanda.data.endsWith(periodo)) {
-                        const profissional = comanda.profissional;
-                        
-                        if (!relatorio[profissional]) {
-                            relatorio[profissional] = {
-                                servicos: 0,
-                                faturamento: 0
-                            };
-                        }
-                        
-                        relatorio[profissional].servicos++;
-                        relatorio[profissional].faturamento += comanda.valor;
-                        faturamentoTotal += comanda.valor;
-                    }
-                });
-                
-                // Preencher a tabela
-                const tbody = document.getElementById('relatorioMensalTable').querySelector('tbody');
-                tbody.innerHTML = '';
-                
-                for (const [profissional, dados] of Object.entries(relatorio)) {
-                    const percentual = faturamentoTotal > 0 ? (dados.faturamento / faturamentoTotal * 100).toFixed(2) : 0;
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${profissional}</td>
-                        <td>${dados.servicos}</td>
-                        <td>R$ ${dados.faturamento.toFixed(2).replace('.', ',')}</td>
-                        <td>${percentual}%</td>
-                    `;
-                    tbody.appendChild(row);
-                }
-                
-                // Adicionar linha de total
-                if (faturamentoTotal > 0) {
-                    const totalRow = document.createElement('tr');
-                    totalRow.className = 'table-primary';
-                    totalRow.innerHTML = `
-                        <td><strong>TOTAL</strong></td>
-                        <td>${Object.values(relatorio).reduce((sum, d) => sum + d.servicos, 0)}</td>
-                        <td><strong>R$ ${faturamentoTotal.toFixed(2).replace('.', ',')}</strong></td>
-                        <td><strong>100%</strong></td>
-                    `;
-                    tbody.appendChild(totalRow);
-                } else {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = '<td colspan="4" class="text-center">Nenhum dado encontrado para o período selecionado</td>';
-                    tbody.appendChild(emptyRow);
-                }
-            }).catch(error => {
-                alert('Erro ao gerar relatório: ' + error.message);
-            }).finally(() => {
-                gerarBtn.innerHTML = originalText;
-                gerarBtn.disabled = false;
-            });
+            // Implementar geração de relatório mensal
         }
 
         function exportReport() {
-            // Verificar se há dados na tabela
-            const tbody = document.getElementById('relatorioMensalTable').querySelector('tbody');
-            if (tbody.rows.length === 0 || (tbody.rows.length === 1 && tbody.rows[0].cells[0].colSpan === 4)) {
-                alert('Não há dados para exportar. Gere o relatório primeiro.');
-                return;
-            }
-            
-            // Criar conteúdo CSV
-            let csvContent = "Profissional,Serviços,Faturamento,% Total\n";
-            
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => {
-                    // Remover R$ e formatar números
-                    let text = cell.textContent.trim();
-                    if (text.startsWith('R$ ')) {
-                        text = text.replace('R$ ', '').replace(',', '.');
-                    } else if (text.endsWith('%') && text !== '100%') {
-                        text = text.replace('%', '');
+            // Implementar exportação de relatório
+        }
+
+        function initCharts() {
+            // Gráfico semanal
+            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+            weeklyChart = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: [1200, 1900, 1500, 2000, 2500, 2200, 1800],
+                        backgroundColor: 'rgba(156, 39, 176, 0.7)',
+                        borderColor: 'rgba(156, 39, 176, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
-                    return `"${text}"`;
-                });
-                csvContent += rowData.join(',') + '\n';
+                }
             });
             
-            // Criar arquivo e fazer download
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;
+            // Gráfico de serviços
+            const servicosCtx = document.getElementById('servicosChart').getContext('2d');
+            servicosChart = new Chart(servicosCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Cabelo', 'Unhas', 'Maquiagem', 'Estética', 'Outros'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            'rgba(156, 39, 176, 0.7)',
+                            'rgba(33, 150, 243, 0.7)',
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(233, 30, 99, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Gráfico de faturamento por profissional
+            const faturamentoCtx = document.getElementById('faturamentoChart').getContext('2d');
+            faturamentoChart = new Chart(faturamentoCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Michele', 'Izabel', 'Graziela', 'Rudy', 'George'],
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: [5000, 4000, 3500, 3000, 2500],
+                        backgroundColor: 'rgba(156, 39, 176, 0.7)',
+                        borderColor: 'rgba(156, 39, 176, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function fillYearDropdown() {
+            const select = document.getElementById('relatorioAno');
+            const currentYear = new Date().getFullYear();
+            
+            for (let year = currentYear; year >= currentYear - 5; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                select.appendChild(option);
+            }
+        }
+
+     function loadMonthlyRevenue() {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // Janeiro é 0
+    const currentYear = now.getFullYear();
+    
+    // Formatar o mês para garantir 2 dígitos (01, 02, ..., 12)
+    const monthFormatted = currentMonth.toString().padStart(2, '0');
+    
+    // Criar padrão de data para filtrar (MM/AAAA)
+    const monthYearPattern = `${monthFormatted}/${currentYear}`;
+    
+    database.ref('SALAO_MICHELE/comandas').once('value').then(snapshot => {
+        let totalRevenue = 0;
+        
+        snapshot.forEach(childSnapshot => {
+            const comanda = childSnapshot.val();
+            
+            // Verificar se a comanda pertence ao mês atual
+            if (comanda.data && comanda.data.endsWith(monthYearPattern)) {
+                totalRevenue += comanda.valor || 0;
+            }
+        });
+        
+        // Formatando o valor para exibição (R$ 12.345,67)
+        const formattedRevenue = totalRevenue.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+        
+        document.getElementById('faturamentoMensal').textContent = formattedRevenue;
+    }).catch(error => {
+        console.error('Erro ao calcular faturamento mensal:', error);
+        document.getElementById('faturamentoMensal').textContent = 'R$ 0,00';
+    });
+}
+
+        function loadRecentActivities() {
+            const tbody = document.getElementById('recentActivities').querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            database.ref('SALAO_MICHELE/comandas').limitToLast(5).once('value').then(snapshot => {
+                snapshot.forEach(childSnapshot => {
+                    const comanda = childSnapshot.val();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${comanda.data}</td>
+                        <td>${comanda.profissional}</td>
+                        <td>${comanda.servico}</td>
+                        <td>R$ ${comanda.valor.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
